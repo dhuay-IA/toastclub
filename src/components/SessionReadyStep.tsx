@@ -1,15 +1,32 @@
 interface SessionReadyStepProps {
   sessionId: string;
-  fileName: string;
-  totalMinutes: number;
-  slideCount: number;
+  mode: "improvisation" | "presentation";
+  // Presentation fields
+  fileName?: string;
+  totalMinutes?: number;
+  slideCount?: number;
+  // Improvisation fields
+  textTitle?: string;
+  duration?: number;
+  // Common
+  difficulty: "easy" | "medium" | "hard";
 }
+
+const difficultyLabels = {
+  easy: "FÁCIL",
+  medium: "MEDIO",
+  hard: "DIFÍCIL",
+};
 
 const SessionReadyStep = ({
   sessionId,
+  mode,
   fileName,
   totalMinutes,
   slideCount,
+  textTitle,
+  duration,
+  difficulty,
 }: SessionReadyStepProps) => {
   const vrUrl = `https://vr.toastclub.app/session/${sessionId}`;
 
@@ -27,17 +44,45 @@ const SessionReadyStep = ({
             <span className="font-mono text-xs text-foreground">{sessionId}</span>
           </div>
           <div className="flex justify-between text-sm border-b border-border pb-3">
-            <span className="text-muted-foreground font-sans">Archivo</span>
-            <span className="font-mono text-xs text-foreground">{fileName}</span>
+            <span className="text-muted-foreground font-sans">Modo</span>
+            <span className="font-mono text-xs text-foreground uppercase">
+              {mode === "improvisation" ? "Improvisación" : "Presentación"}
+            </span>
           </div>
           <div className="flex justify-between text-sm border-b border-border pb-3">
-            <span className="text-muted-foreground font-sans">Diapositivas</span>
-            <span className="font-mono text-xs text-foreground">{slideCount}</span>
+            <span className="text-muted-foreground font-sans">Dificultad</span>
+            <span className="font-mono text-xs text-foreground">{difficultyLabels[difficulty]}</span>
           </div>
-          <div className="flex justify-between text-sm border-b border-border pb-3">
-            <span className="text-muted-foreground font-sans">Duración</span>
-            <span className="font-mono text-xs text-foreground">{totalMinutes} min</span>
-          </div>
+
+          {mode === "presentation" && (
+            <>
+              <div className="flex justify-between text-sm border-b border-border pb-3">
+                <span className="text-muted-foreground font-sans">Archivo</span>
+                <span className="font-mono text-xs text-foreground">{fileName}</span>
+              </div>
+              <div className="flex justify-between text-sm border-b border-border pb-3">
+                <span className="text-muted-foreground font-sans">Diapositivas</span>
+                <span className="font-mono text-xs text-foreground">{slideCount}</span>
+              </div>
+              <div className="flex justify-between text-sm border-b border-border pb-3">
+                <span className="text-muted-foreground font-sans">Duración</span>
+                <span className="font-mono text-xs text-foreground">{totalMinutes} min</span>
+              </div>
+            </>
+          )}
+
+          {mode === "improvisation" && (
+            <>
+              <div className="flex justify-between text-sm border-b border-border pb-3">
+                <span className="text-muted-foreground font-sans">Tema</span>
+                <span className="font-mono text-xs text-foreground max-w-[200px] text-right">{textTitle}</span>
+              </div>
+              <div className="flex justify-between text-sm border-b border-border pb-3">
+                <span className="text-muted-foreground font-sans">Duración</span>
+                <span className="font-mono text-xs text-foreground">{duration} min</span>
+              </div>
+            </>
+          )}
         </div>
 
         <a
@@ -46,12 +91,13 @@ const SessionReadyStep = ({
           rel="noopener noreferrer"
           className="btn-primary w-full block text-center"
         >
-          ABRIR EN VR
+          INICIAR SESIÓN VR
         </a>
 
         <p className="text-xs text-muted-foreground font-sans mt-4 text-center">
-          El payload de sesión ha sido preparado y está disponible para descarga
-          en el entorno VR mediante el session_id proporcionado.
+          {mode === "presentation"
+            ? "El payload visual ha sido preparado. La sesión finalizará automáticamente al cumplirse el tiempo asignado."
+            : "El texto ha sido cargado. Lee el teleprompter y luego improvisa tu discurso a favor o en contra del tema."}
         </p>
       </div>
     </div>
