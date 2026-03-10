@@ -19,24 +19,24 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
 
   return (
     <div className="step-container py-16">
-      <div className="mb-10">
-        <h1 className="font-mono text-2xl tracking-tight text-foreground mb-2">
-          TOASTCLUB<span className="animate-blink text-primary">_</span>
+      <div className="mb-10 text-center">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground mb-1">
+          Toast<span className="text-primary">Club</span>
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Staging tool para práctica de presentaciones en VR.
+        <p className="text-sm text-muted-foreground mt-3">
+          Entrena tu oratoria en realidad virtual con IA
         </p>
       </div>
 
-      <div className="border border-border bg-card p-8 max-w-md">
-        <h2 className="font-mono text-sm uppercase tracking-wider text-foreground mb-6">
+      <div className="glass-card p-8 max-w-md mx-auto">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-6">
           {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && (
             <div>
-              <label className="block font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
+              <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
                 Nombre
               </label>
               <input
@@ -50,7 +50,7 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
           )}
 
           <div>
-            <label className="block font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
               Email
             </label>
             <input
@@ -64,7 +64,7 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
           </div>
 
           <div>
-            <label className="block font-mono text-xs uppercase tracking-wider text-muted-foreground mb-2">
+            <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
               Contraseña
             </label>
             <input
@@ -84,7 +84,7 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
 
         <button
           onClick={() => setIsLogin(!isLogin)}
-          className="mt-4 text-xs text-muted-foreground hover:text-foreground font-sans w-full text-center block"
+          className="mt-4 text-xs text-muted-foreground hover:text-primary transition-colors w-full text-center block"
         >
           {isLogin
             ? "¿No tienes cuenta? Crear una"

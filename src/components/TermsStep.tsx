@@ -10,28 +10,27 @@ const TermsStep = ({ onComplete }: TermsStepProps) => {
 
   return (
     <div className="step-container py-12">
-      <div className="border border-border bg-card p-8 max-w-md">
-        <h2 className="font-mono text-sm uppercase tracking-wider text-foreground mb-6">
+      <div className="glass-card p-8 max-w-md mx-auto">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground mb-6">
           Términos y Consentimiento
         </h2>
 
-        <div className="space-y-6 text-sm text-muted-foreground font-sans leading-relaxed">
-          <div className="border border-border p-4 max-h-40 overflow-y-auto text-xs">
+        <div className="space-y-6 text-sm text-muted-foreground leading-relaxed">
+          <div className="border border-border rounded-lg p-4 max-h-40 overflow-y-auto text-xs bg-muted/20">
             <p className="mb-3">
               <strong className="text-foreground">1. Términos de Servicio</strong><br />
               Al utilizar ToastClub, usted acepta que los archivos subidos (PDF, PPT) serán procesados
               para generar secuencias de imágenes destinadas a sesiones de práctica en entornos de
-              Realidad Virtual. Los archivos se almacenan temporalmente y se eliminan tras la sesión.
+              Realidad Virtual.
             </p>
             <p className="mb-3">
               <strong className="text-foreground">2. Uso del Servicio</strong><br />
               El servicio está destinado exclusivamente a la práctica de presentaciones. Queda prohibido
-              subir contenido ilegal, ofensivo o que infrinja derechos de propiedad intelectual de terceros.
+              subir contenido ilegal u ofensivo.
             </p>
             <p>
               <strong className="text-foreground">3. Limitación de Responsabilidad</strong><br />
-              ToastClub no garantiza la disponibilidad ininterrumpida del servicio ni se responsabiliza
-              por pérdida de datos durante el procesamiento.
+              ToastClub no garantiza la disponibilidad ininterrumpida del servicio.
             </p>
           </div>
 
@@ -40,9 +39,9 @@ const TermsStep = ({ onComplete }: TermsStepProps) => {
               type="checkbox"
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-0.5 accent-primary"
+              className="mt-0.5 accent-[hsl(186,100%,50%)]"
             />
-            <span className="group-hover:text-foreground transition-none">
+            <span className="group-hover:text-foreground transition-colors">
               Acepto los términos y condiciones del servicio.
             </span>
           </label>
@@ -52,11 +51,10 @@ const TermsStep = ({ onComplete }: TermsStepProps) => {
               type="checkbox"
               checked={acceptedData}
               onChange={(e) => setAcceptedData(e.target.checked)}
-              className="mt-0.5 accent-primary"
+              className="mt-0.5 accent-[hsl(186,100%,50%)]"
             />
-            <span className="group-hover:text-foreground transition-none">
-              Consiento el tratamiento de mis datos personales y archivos subidos
-              conforme a la política de privacidad.
+            <span className="group-hover:text-foreground transition-colors">
+              Consiento el tratamiento de mis datos personales conforme a la política de privacidad.
             </span>
           </label>
         </div>
