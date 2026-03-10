@@ -62,8 +62,9 @@ const ProcessingStep = ({
     let i = 0;
     const interval = setInterval(() => {
       if (i < allLines.length) {
-        setLines((prev) => [...prev, allLines[i]]);
+        const currentLine = allLines[i];
         i++;
+        setLines((prev) => [...prev, currentLine]);
       } else {
         clearInterval(interval);
         setDone(true);
