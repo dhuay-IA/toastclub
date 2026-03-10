@@ -85,6 +85,10 @@ const Index = () => {
     setCurrentStep("ready");
   };
 
+  if (currentStep === "landing") {
+    return <LandingPage onStart={() => setCurrentStep("login")} />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Subtle background glow */}
