@@ -87,7 +87,7 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
           className="mt-4 text-xs text-muted-foreground hover:text-primary transition-colors w-full text-center block"
         >
           {isLogin
-            ? "¿No tienes cuenta? Crear una"
+            ? "¿No tienes cuenta? Regístrate aquí"
             : "¿Ya tienes cuenta? Iniciar sesión"}
         </button>
       </div>
