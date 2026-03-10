@@ -28,7 +28,7 @@ const generateSessionId = () => {
 };
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<FlowStep>("login");
+  const [currentStep, setCurrentStep] = useState<FlowStep>("landing");
 
   const [mode, setMode] = useState<"improvisation" | "presentation">("improvisation");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
