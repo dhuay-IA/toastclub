@@ -1,4 +1,5 @@
 import { useState } from "react";
+import LandingPage from "@/components/LandingPage";
 import LoginStep from "@/components/LoginStep";
 import TermsStep from "@/components/TermsStep";
 import ModeSelectionStep from "@/components/ModeSelectionStep";
@@ -9,6 +10,7 @@ import SessionReadyStep from "@/components/SessionReadyStep";
 import StepTimeline from "@/components/StepTimeline";
 
 type FlowStep =
+  | "landing"
   | "login"
   | "terms"
   | "mode"
