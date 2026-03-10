@@ -51,8 +51,8 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
 
   return (
     <div className="step-container py-12">
-      <div className="max-w-lg">
-        <h2 className="font-mono text-sm uppercase tracking-wider text-foreground mb-6">
+      <div className="max-w-lg mx-auto">
+        <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
           Selecciona un Texto
         </h2>
 
@@ -73,10 +73,10 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
             <button
               key={tag}
               onClick={() => toggleTag(tag)}
-              className={`font-mono text-xs uppercase tracking-wider px-3 py-1.5 border transition-none ${
+              className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                 selectedTags.includes(tag)
                   ? "border-primary bg-primary/10 text-primary"
-                  : "border-border text-muted-foreground hover:border-muted-foreground"
+                  : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
               }`}
             >
               {tag}
@@ -90,18 +90,18 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
             <button
               key={text.id}
               onClick={() => setSelectedText(text.id)}
-              className={`w-full text-left p-4 border transition-none ${
+              className={`w-full text-left p-4 rounded-lg border transition-colors ${
                 selectedText === text.id
                   ? "border-primary bg-primary/5"
-                  : "border-border bg-card hover:border-muted-foreground"
+                  : "border-border bg-card/50 hover:border-muted-foreground"
               }`}
             >
-              <div className="text-sm text-foreground font-sans">{text.title}</div>
+              <div className="text-sm text-foreground">{text.title}</div>
               <div className="flex gap-2 mt-1.5">
                 {text.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground"
+                    className="text-[10px] uppercase tracking-wider text-muted-foreground/70"
                   >
                     {tag}
                   </span>
@@ -110,7 +110,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
             </button>
           ))}
           {filteredTexts.length === 0 && (
-            <div className="text-sm text-muted-foreground font-sans py-4 text-center">
+            <div className="text-sm text-muted-foreground py-4 text-center">
               No se encontraron textos con esos criterios.
             </div>
           )}
@@ -118,7 +118,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
 
         {/* Duration */}
         <div className="mb-8">
-          <label className="block font-mono text-xs uppercase tracking-wider text-muted-foreground mb-3">
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
             Duración de improvisación
           </label>
           <div className="flex items-center gap-4">
@@ -130,7 +130,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
               onChange={(e) => setDuration(Number(e.target.value))}
               className="input-field w-24 text-center font-mono"
             />
-            <span className="text-sm text-muted-foreground font-sans">minutos (recomendado: 3)</span>
+            <span className="text-sm text-muted-foreground">minutos (recomendado: 3)</span>
           </div>
         </div>
 

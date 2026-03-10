@@ -6,6 +6,7 @@ import ImprovisationConfigStep from "@/components/ImprovisationConfigStep";
 import PresentationConfigStep from "@/components/PresentationConfigStep";
 import DifficultyStep from "@/components/DifficultyStep";
 import SessionReadyStep from "@/components/SessionReadyStep";
+import StepTimeline from "@/components/StepTimeline";
 
 type FlowStep =
   | "login"
@@ -15,10 +16,6 @@ type FlowStep =
   | "config-presentation"
   | "difficulty"
   | "ready";
-
-interface CompletedStep {
-  label: string;
-}
 
 const generateSessionId = () => {
   const hex = () =>
@@ -30,40 +27,28 @@ const generateSessionId = () => {
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState<FlowStep>("login");
-  const [completedSteps, setCompletedSteps] = useState<CompletedStep[]>([]);
 
   const [mode, setMode] = useState<"improvisation" | "presentation">("improvisation");
   const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">("medium");
   const [sessionId, setSessionId] = useState("");
 
-  // Presentation data
   const [fileName, setFileName] = useState("");
   const [totalMinutes, setTotalMinutes] = useState(0);
   const [slideCount, setSlideCount] = useState(0);
 
-  // Improvisation data
   const [textTitle, setTextTitle] = useState("");
   const [duration, setDuration] = useState(3);
 
-  const addCompleted = (label: string) => {
-    setCompletedSteps((prev) => [...prev, { label }]);
-  };
-
-  const handleLogin = (email: string) => {
-    addCompleted(`Usuario: ${email} [✓]`);
+  const handleLogin = (_email: string) => {
     setCurrentStep("terms");
   };
 
   const handleTerms = () => {
-    addCompleted("Términos aceptados [✓]");
     setCurrentStep("mode");
   };
 
   const handleMode = (selectedMode: "improvisation" | "presentation") => {
     setMode(selectedMode);
-    addCompleted(
-      `Modo: ${selectedMode === "improvisation" ? "Improvisación" : "Presentación propia"} [✓]`
-    );
     setCurrentStep(
       selectedMode === "improvisation" ? "config-improv" : "config-presentation"
     );
@@ -76,7 +61,6 @@ const Index = () => {
   }) => {
     setTextTitle(config.textTitle);
     setDuration(config.duration);
-    addCompleted(`Texto: "${config.textTitle}" | ${config.duration}min [✓]`);
     setCurrentStep("difficulty");
   };
 
@@ -89,37 +73,31 @@ const Index = () => {
     setFileName(config.fileName);
     setTotalMinutes(config.totalMinutes);
     setSlideCount(config.slideCount);
-    addCompleted(`Archivo: ${config.fileName} | ${config.totalMinutes}min [✓]`);
     setCurrentStep("difficulty");
   };
 
   const handleDifficulty = (d: "easy" | "medium" | "hard") => {
     setDifficulty(d);
-    const labels = { easy: "Fácil", medium: "Medio", hard: "Difícil" };
-    addCompleted(`Dificultad: ${labels[d]} [✓]`);
-
     const newSessionId = generateSessionId();
     setSessionId(newSessionId);
-    addCompleted(`Sesión: ${newSessionId} [✓]`);
     setCurrentStep("ready");
   };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Collapsed completed steps */}
-      {completedSteps.length > 0 && (
-        <div className="border-b border-border">
-          {completedSteps.map((step, idx) => (
-            <div key={idx} className="step-summary">
-              <span className="check">[✓]</span>
-              <span>{step.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Subtle background glow */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-30%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-[0.03]"
+          style={{ background: "radial-gradient(circle, hsl(186 100% 50%), transparent)" }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full opacity-[0.03]"
+          style={{ background: "radial-gradient(circle, hsl(262 83% 58%), transparent)" }} />
+      </div>
+
+      {/* Timeline */}
+      <StepTimeline currentStep={currentStep} />
 
       {/* Active step */}
-      <div className="flex-1 flex flex-col justify-center">
+      <div className="flex-1 flex flex-col justify-center relative z-10">
         {currentStep === "login" && <LoginStep onComplete={handleLogin} />}
         {currentStep === "terms" && <TermsStep onComplete={handleTerms} />}
         {currentStep === "mode" && <ModeSelectionStep onComplete={handleMode} />}

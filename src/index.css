@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,47 +6,51 @@
 
 @layer base {
   :root {
-    --background: 0 0% 6.7%;
-    --foreground: 0 0% 91.8%;
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
 
-    --card: 0 0% 13.3%;
-    --card-foreground: 0 0% 91.8%;
+    --card: 222 47% 10%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 0 0% 13.3%;
-    --popover-foreground: 0 0% 91.8%;
+    --popover: 222 47% 10%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 39 100% 50%;
-    --primary-foreground: 0 0% 6.7%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 222 47% 6%;
 
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 91.8%;
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 222 30% 16%;
+    --muted-foreground: 215 20% 55%;
 
-    --accent: 39 100% 50%;
-    --accent-foreground: 0 0% 6.7%;
+    --accent: 14 100% 63%;
+    --accent-foreground: 222 47% 6%;
 
-    --destructive: 0 60% 50%;
-    --destructive-foreground: 0 0% 91.8%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 96%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 39 100% 50%;
+    --border: 222 30% 18%;
+    --input: 222 30% 18%;
+    --ring: 186 100% 50%;
 
-    --radius: 0.25rem;
+    --radius: 0.75rem;
 
-    --font-mono: 'Roboto Mono', monospace;
-    --font-sans: 'Source Sans 3', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'Space Grotesk', sans-serif;
 
-    --sidebar-background: 0 0% 10%;
-    --sidebar-foreground: 0 0% 91.8%;
-    --sidebar-primary: 39 100% 50%;
-    --sidebar-primary-foreground: 0 0% 6.7%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 0 0% 91.8%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 39 100% 50%;
+    --glow-primary: 186 100% 50%;
+    --glow-secondary: 262 83% 58%;
+    --glow-accent: 14 100% 63%;
+
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 186 100% 50%;
+    --sidebar-primary-foreground: 222 47% 6%;
+    --sidebar-accent: 222 30% 14%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 222 30% 18%;
+    --sidebar-ring: 186 100% 50%;
   }
 }
 
@@ -62,7 +66,7 @@
 
   h1, h2, h3, h4, h5, h6,
   button, label, [data-heading] {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
   }
 
   /* Custom scrollbar */
@@ -74,9 +78,10 @@
   }
   ::-webkit-scrollbar-thumb {
     background: hsl(var(--muted-foreground));
+    border-radius: 2px;
   }
 
-  /* Amber cursor for inputs */
+  /* Cyan cursor for inputs */
   input, textarea, select {
     caret-color: hsl(var(--primary));
   }
@@ -84,22 +89,13 @@
   input:focus, textarea:focus, select:focus {
     outline: none;
     border-color: hsl(var(--primary)) !important;
-    box-shadow: 0 0 0 1px hsl(var(--primary));
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.5), 0 0 20px hsl(var(--primary) / 0.1);
   }
 }
 
 @layer components {
   .step-container {
     @apply w-full max-w-2xl mx-auto px-6;
-  }
-
-  .step-summary {
-    @apply py-3 px-4 border-b border-border font-mono text-sm text-muted-foreground flex items-center gap-2;
-    font-family: var(--font-mono);
-  }
-
-  .step-summary .check {
-    color: hsl(var(--primary));
   }
 
   .terminal-text {
@@ -111,24 +107,33 @@
   }
 
   .btn-primary {
-    @apply px-6 py-3 font-mono text-sm uppercase tracking-wider transition-none;
-    font-family: var(--font-mono);
-    background: hsl(var(--primary));
+    @apply px-6 py-3.5 text-sm font-semibold uppercase tracking-wider rounded-lg transition-all duration-200;
+    font-family: var(--font-sans);
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--glow-secondary)));
     color: hsl(var(--primary-foreground));
-    font-weight: 500;
+    box-shadow: 0 4px 15px hsl(var(--primary) / 0.3);
   }
 
   .btn-primary:hover {
-    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px hsl(var(--primary) / 0.4);
   }
 
   .btn-primary:disabled {
-    opacity: 0.4;
+    opacity: 0.3;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 text-sm border border-border bg-background text-foreground;
+    @apply w-full px-4 py-3 text-sm border border-border bg-muted/30 text-foreground rounded-lg backdrop-blur-sm;
     font-family: var(--font-sans);
+  }
+
+  .glass-card {
+    @apply border border-border rounded-xl backdrop-blur-md;
+    background: linear-gradient(135deg, hsl(var(--card) / 0.8), hsl(var(--card) / 0.4));
+    box-shadow: 0 8px 32px hsl(var(--background) / 0.5);
   }
 }

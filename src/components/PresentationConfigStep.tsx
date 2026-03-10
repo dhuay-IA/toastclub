@@ -28,14 +28,11 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
 
     const ext = selected.name.split(".").pop()?.toLowerCase();
     if (ext !== "pdf" && ext !== "ppt" && ext !== "pptx") return;
-
-    // Validate size (max 50MB)
     if (selected.size > 50 * 1024 * 1024) return;
 
     setFile(selected);
     setProcessed(false);
 
-    // Silent processing simulation
     setIsProcessing(true);
     const fakeSlides = Math.floor(Math.random() * 20) + 8;
     setTimeout(() => {
@@ -57,8 +54,8 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
 
   return (
     <div className="step-container py-12">
-      <div className="max-w-md">
-        <h2 className="font-mono text-sm uppercase tracking-wider text-foreground mb-6">
+      <div className="max-w-md mx-auto">
+        <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
           Sube tu Presentación
         </h2>
 
@@ -75,35 +72,39 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
           {!file ? (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full border border-dashed border-muted-foreground/30 p-8 text-center hover:border-primary transition-none"
+              className="w-full glass-card border-dashed p-10 text-center hover:border-primary transition-colors"
             >
-              <div className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-                [ Seleccionar archivo ]
+              <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-3">
+                <span className="text-secondary text-xl">📄</span>
               </div>
-              <div className="text-xs text-muted-foreground/60 mt-2 font-sans">
+              <div className="text-sm text-muted-foreground font-medium">
+                Seleccionar archivo
+              </div>
+              <div className="text-xs text-muted-foreground/60 mt-1">
                 PDF, PPT o PPTX — Máx. 50MB
               </div>
             </button>
           ) : (
             <div
-              className={`border p-4 ${
-                isProcessing
-                  ? "border-muted bg-card"
-                  : "border-primary/30 bg-primary/5"
+              className={`glass-card p-5 ${
+                isProcessing ? "border-muted" : "border-primary/30"
               }`}
             >
               {isProcessing ? (
-                <div className="font-mono text-xs text-muted-foreground uppercase tracking-wider">
-                  Procesando archivo<span className="animate-blink">...</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-muted-foreground">
+                    Procesando archivo...
+                  </span>
                 </div>
               ) : (
                 <>
-                  <div className="font-mono text-xs text-primary flex items-center gap-2">
-                    <span>[✓]</span>
+                  <div className="text-sm text-primary flex items-center gap-2 font-medium">
+                    <span>✓</span>
                     <span>Presentación cargada</span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1 font-sans">
-                    {file.name} — {formatSize(file.size)} — {slideCount} diapositivas detectadas
+                  <div className="text-xs text-muted-foreground mt-1">
+                    {file.name} — {formatSize(file.size)} — {slideCount} diapositivas
                   </div>
                 </>
               )}
@@ -113,19 +114,19 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
                     setFile(null);
                     setProcessed(false);
                   }}
-                  className="text-xs text-muted-foreground hover:text-foreground mt-2 font-mono"
+                  className="text-xs text-muted-foreground hover:text-primary mt-2 transition-colors"
                 >
-                  [CAMBIAR]
+                  Cambiar archivo
                 </button>
               )}
             </div>
           )}
         </div>
 
-        {/* Time config - only show after processing */}
+        {/* Time config */}
         {processed && (
           <div className="mb-8">
-            <label className="block font-mono text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
               Tiempo total de exposición
             </label>
             <div className="flex items-center gap-4">
@@ -137,9 +138,9 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
                 onChange={(e) => setMinutes(Number(e.target.value))}
                 className="input-field w-24 text-center font-mono"
               />
-              <span className="text-sm text-muted-foreground font-sans">minutos</span>
+              <span className="text-sm text-muted-foreground">minutos</span>
             </div>
-            <p className="text-xs text-muted-foreground/60 font-sans mt-2">
+            <p className="text-xs text-muted-foreground/60 mt-2">
               La sesión finalizará automáticamente al cumplirse este tiempo.
             </p>
           </div>

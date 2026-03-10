@@ -1,21 +1,24 @@
 interface SessionReadyStepProps {
   sessionId: string;
   mode: "improvisation" | "presentation";
-  // Presentation fields
   fileName?: string;
   totalMinutes?: number;
   slideCount?: number;
-  // Improvisation fields
   textTitle?: string;
   duration?: number;
-  // Common
   difficulty: "easy" | "medium" | "hard";
 }
 
 const difficultyLabels = {
-  easy: "FÁCIL",
-  medium: "MEDIO",
-  hard: "DIFÍCIL",
+  easy: "Fácil",
+  medium: "Medio",
+  hard: "Difícil",
+};
+
+const difficultyColors = {
+  easy: "text-green-400",
+  medium: "text-accent",
+  hard: "text-destructive",
 };
 
 const SessionReadyStep = ({
@@ -32,54 +35,60 @@ const SessionReadyStep = ({
 
   return (
     <div className="step-container py-12">
-      <div className="border border-border bg-card p-8 max-w-md">
-        <div className="font-mono text-xs text-primary uppercase tracking-wider mb-6 flex items-center gap-2">
-          <span>[✓]</span>
-          <span>Sesión Lista</span>
+      <div className="glass-card p-8 max-w-md mx-auto">
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
+            <span className="text-primary text-2xl">🚀</span>
+          </div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Sesión Lista
+          </h2>
         </div>
 
-        <div className="space-y-4 mb-8">
-          <div className="flex justify-between text-sm border-b border-border pb-3">
-            <span className="text-muted-foreground font-sans">Session ID</span>
+        <div className="space-y-3 mb-8">
+          <div className="flex justify-between text-sm py-2 border-b border-border/50">
+            <span className="text-muted-foreground">Session ID</span>
             <span className="font-mono text-xs text-foreground">{sessionId}</span>
           </div>
-          <div className="flex justify-between text-sm border-b border-border pb-3">
-            <span className="text-muted-foreground font-sans">Modo</span>
-            <span className="font-mono text-xs text-foreground uppercase">
+          <div className="flex justify-between text-sm py-2 border-b border-border/50">
+            <span className="text-muted-foreground">Modo</span>
+            <span className="text-sm text-foreground">
               {mode === "improvisation" ? "Improvisación" : "Presentación"}
             </span>
           </div>
-          <div className="flex justify-between text-sm border-b border-border pb-3">
-            <span className="text-muted-foreground font-sans">Dificultad</span>
-            <span className="font-mono text-xs text-foreground">{difficultyLabels[difficulty]}</span>
+          <div className="flex justify-between text-sm py-2 border-b border-border/50">
+            <span className="text-muted-foreground">Dificultad</span>
+            <span className={`text-sm font-medium ${difficultyColors[difficulty]}`}>
+              {difficultyLabels[difficulty]}
+            </span>
           </div>
 
           {mode === "presentation" && (
             <>
-              <div className="flex justify-between text-sm border-b border-border pb-3">
-                <span className="text-muted-foreground font-sans">Archivo</span>
-                <span className="font-mono text-xs text-foreground">{fileName}</span>
+              <div className="flex justify-between text-sm py-2 border-b border-border/50">
+                <span className="text-muted-foreground">Archivo</span>
+                <span className="text-sm text-foreground">{fileName}</span>
               </div>
-              <div className="flex justify-between text-sm border-b border-border pb-3">
-                <span className="text-muted-foreground font-sans">Diapositivas</span>
-                <span className="font-mono text-xs text-foreground">{slideCount}</span>
+              <div className="flex justify-between text-sm py-2 border-b border-border/50">
+                <span className="text-muted-foreground">Diapositivas</span>
+                <span className="text-sm text-foreground">{slideCount}</span>
               </div>
-              <div className="flex justify-between text-sm border-b border-border pb-3">
-                <span className="text-muted-foreground font-sans">Duración</span>
-                <span className="font-mono text-xs text-foreground">{totalMinutes} min</span>
+              <div className="flex justify-between text-sm py-2 border-b border-border/50">
+                <span className="text-muted-foreground">Duración</span>
+                <span className="text-sm text-foreground">{totalMinutes} min</span>
               </div>
             </>
           )}
 
           {mode === "improvisation" && (
             <>
-              <div className="flex justify-between text-sm border-b border-border pb-3">
-                <span className="text-muted-foreground font-sans">Tema</span>
-                <span className="font-mono text-xs text-foreground max-w-[200px] text-right">{textTitle}</span>
+              <div className="flex justify-between text-sm py-2 border-b border-border/50">
+                <span className="text-muted-foreground">Tema</span>
+                <span className="text-sm text-foreground max-w-[200px] text-right">{textTitle}</span>
               </div>
-              <div className="flex justify-between text-sm border-b border-border pb-3">
-                <span className="text-muted-foreground font-sans">Duración</span>
-                <span className="font-mono text-xs text-foreground">{duration} min</span>
+              <div className="flex justify-between text-sm py-2 border-b border-border/50">
+                <span className="text-muted-foreground">Duración</span>
+                <span className="text-sm text-foreground">{duration} min</span>
               </div>
             </>
           )}
@@ -94,10 +103,10 @@ const SessionReadyStep = ({
           INICIAR SESIÓN VR
         </a>
 
-        <p className="text-xs text-muted-foreground font-sans mt-4 text-center">
+        <p className="text-xs text-muted-foreground mt-4 text-center">
           {mode === "presentation"
-            ? "El payload visual ha sido preparado. La sesión finalizará automáticamente al cumplirse el tiempo asignado."
-            : "El texto ha sido cargado. Lee el teleprompter y luego improvisa tu discurso a favor o en contra del tema."}
+            ? "Tu presentación está lista. La sesión finalizará automáticamente al cumplirse el tiempo."
+            : "El texto ha sido cargado. Lee el teleprompter y luego improvisa tu discurso."}
         </p>
       </div>
     </div>
