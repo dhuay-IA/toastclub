@@ -39,7 +39,7 @@ const TermsStep = ({ onComplete }: TermsStepProps) => {
               type="checkbox"
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
-              className="mt-0.5 accent-[hsl(186,100%,50%)]"
+              className="mt-0.5 accent-[#007cd8]"
             />
             <span className="group-hover:text-foreground transition-colors">
               Acepto los términos y condiciones del servicio.
@@ -51,7 +51,7 @@ const TermsStep = ({ onComplete }: TermsStepProps) => {
               type="checkbox"
               checked={acceptedData}
               onChange={(e) => setAcceptedData(e.target.checked)}
-              className="mt-0.5 accent-[hsl(186,100%,50%)]"
+              className="mt-0.5 accent-[#007cd8]"
             />
             <span className="group-hover:text-foreground transition-colors">
               Consiento el tratamiento de mis datos personales conforme a la política de privacidad.

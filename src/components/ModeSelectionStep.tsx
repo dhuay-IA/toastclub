@@ -18,10 +18,10 @@ const ModeSelectionStep = ({ onComplete }: ModeSelectionStepProps) => {
         {/* Modo Improvisación */}
         <button
           onClick={() => onComplete("improvisation")}
-          className="glass-card p-6 text-left hover:border-primary transition-colors group"
+          className="glass-card p-6 text-left hover:border-secondary transition-colors group"
         >
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-            <span className="text-primary text-lg">🎤</span>
+          <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
+            <span className="text-secondary text-lg">🎤</span>
           </div>
           <div className="text-sm font-semibold text-foreground mb-2">
             Improvisación

@@ -1,10 +1,11 @@
 const STEPS = [
-  { key: "login", label: "Acceso" },
-  { key: "terms", label: "Términos" },
-  { key: "mode", label: "Modo" },
-  { key: "config", label: "Configurar" },
+  { key: "login",      label: "Acceso" },
+  { key: "otp",        label: "Verificar" },
+  { key: "terms",      label: "Términos" },
+  { key: "mode",       label: "Modo" },
+  { key: "config",     label: "Configurar" },
   { key: "difficulty", label: "Dificultad" },
-  { key: "ready", label: "Sesión" },
+  { key: "ready",      label: "Sesión" },
 ];
 
 interface StepTimelineProps {
@@ -14,12 +15,13 @@ interface StepTimelineProps {
 const getStepIndex = (step: string) => {
   const map: Record<string, number> = {
     login: 0,
-    terms: 1,
-    mode: 2,
-    "config-improv": 3,
-    "config-presentation": 3,
-    difficulty: 4,
-    ready: 5,
+    otp: 1,
+    terms: 2,
+    mode: 3,
+    "config-improv": 4,
+    "config-presentation": 4,
+    difficulty: 5,
+    ready: 6,
   };
   return map[step] ?? 0;
 };
@@ -41,9 +43,9 @@ const StepTimeline = ({ currentStep }: StepTimelineProps) => {
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     isDone
-                      ? "w-full bg-gradient-to-r from-primary to-secondary"
+                      ? "w-full bg-secondary"
                       : isActive
-                      ? "w-1/2 bg-primary animate-pulse-glow"
+                      ? "w-1/2 bg-secondary animate-pulse-glow"
                       : "w-0"
                   }`}
                 />
@@ -52,7 +54,7 @@ const StepTimeline = ({ currentStep }: StepTimelineProps) => {
               <span
                 className={`text-[10px] font-medium tracking-wider uppercase transition-all duration-300 ${
                   isActive
-                    ? "text-primary"
+                    ? "text-secondary"
                     : isDone
                     ? "text-muted-foreground/60"
                     : "text-muted-foreground/30"

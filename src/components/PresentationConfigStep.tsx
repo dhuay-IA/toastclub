@@ -72,7 +72,7 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
           {!file ? (
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full glass-card border-dashed p-10 text-center hover:border-primary transition-colors"
+              className="w-full glass-card border-dashed p-10 text-center hover:border-secondary transition-colors"
             >
               <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-3">
                 <span className="text-secondary text-xl">📄</span>
@@ -87,19 +87,19 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
           ) : (
             <div
               className={`glass-card p-5 ${
-                isProcessing ? "border-muted" : "border-primary/30"
+                isProcessing ? "border-muted" : "border-secondary/30"
               }`}
             >
               {isProcessing ? (
                 <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
                   <span className="text-sm text-muted-foreground">
                     Procesando archivo...
                   </span>
                 </div>
               ) : (
                 <>
-                  <div className="text-sm text-primary flex items-center gap-2 font-medium">
+                  <div className="text-sm text-secondary flex items-center gap-2 font-medium">
                     <span>✓</span>
                     <span>Presentación cargada</span>
                   </div>
@@ -114,7 +114,7 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
                     setFile(null);
                     setProcessed(false);
                   }}
-                  className="text-xs text-muted-foreground hover:text-primary mt-2 transition-colors"
+                  className="text-xs text-muted-foreground hover:text-secondary mt-2 transition-colors"
                 >
                   Cambiar archivo
                 </button>

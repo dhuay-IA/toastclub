@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sendOTP } from "@/lib/auth";
 
 interface LoginStepProps {
   onComplete: (email: string) => void;
@@ -7,13 +8,26 @@ interface LoginStepProps {
 const LoginStep = ({ onComplete }: LoginStepProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (email && password) {
-      onComplete(email);
+    if (!email) return;
+    setLoading(true);
+    setError("");
+    try {
+      const res = await sendOTP(email, isLogin ? undefined : name);
+      if (res.success) {
+        onComplete(email);
+      } else {
+        setError(res.message || "No se pudo enviar el código. Inténtalo de nuevo.");
+      }
+    } catch {
+      setError("Error de conexión. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,6 +59,7 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
                 onChange={(e) => setName(e.target.value)}
                 className="input-field"
                 placeholder="Tu nombre completo"
+                required
               />
             </div>
           )}
@@ -56,35 +71,29 @@ const LoginStep = ({ onComplete }: LoginStepProps) => {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => { setEmail(e.target.value); setError(""); }}
               className="input-field"
               placeholder="usuario@email.com"
               required
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-field"
-              placeholder="••••••••"
-              required
-            />
-          </div>
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
 
-          <button type="submit" className="btn-primary w-full mt-6">
-            {isLogin ? "ACCEDER" : "CREAR CUENTA"}
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-6">
+            {loading ? "Enviando código..." : "ENVIAR CÓDIGO"}
           </button>
         </form>
 
+        <p className="text-xs text-muted-foreground mt-4 text-center">
+          Recibirás un código de verificación en tu correo.
+        </p>
+
         <button
-          onClick={() => setIsLogin(!isLogin)}
-          className="mt-4 text-xs text-muted-foreground hover:text-primary transition-colors w-full text-center block"
+          onClick={() => { setIsLogin(!isLogin); setError(""); }}
+          className="mt-3 text-xs text-muted-foreground hover:text-secondary transition-colors w-full text-center block"
         >
           {isLogin
             ? "¿No tienes cuenta? Regístrate aquí"

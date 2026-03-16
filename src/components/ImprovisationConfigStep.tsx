@@ -75,7 +75,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
               onClick={() => toggleTag(tag)}
               className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
                 selectedTags.includes(tag)
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-secondary bg-secondary/10 text-secondary"
                   : "border-border text-muted-foreground hover:border-muted-foreground hover:text-foreground"
               }`}
             >
@@ -90,11 +90,12 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
             <button
               key={text.id}
               onClick={() => setSelectedText(text.id)}
-              className={`w-full text-left p-4 rounded-lg border transition-colors ${
+              className={`w-full text-left p-4 rounded-xl border backdrop-blur-md transition-colors ${
                 selectedText === text.id
-                  ? "border-primary bg-primary/5"
-                  : "border-border bg-card/50 hover:border-muted-foreground"
+                  ? "border-secondary/60 bg-secondary/8"
+                  : "hover:border-white/80"
               }`}
+              style={selectedText !== text.id ? { background: "rgba(255,255,255,0.72)", borderColor: "rgba(255,255,255,0.70)" } : undefined}
             >
               <div className="text-sm text-foreground">{text.title}</div>
               <div className="flex gap-2 mt-1.5">

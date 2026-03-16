@@ -37,8 +37,8 @@ const SessionReadyStep = ({
     <div className="step-container py-12">
       <div className="glass-card p-8 max-w-md mx-auto">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-            <span className="text-primary text-2xl">🚀</span>
+          <div className="w-14 h-14 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-3">
+            <span className="text-2xl">🚀</span>
           </div>
           <h2 className="text-lg font-semibold text-foreground">
             Sesión Lista
