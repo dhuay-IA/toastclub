@@ -14,7 +14,7 @@
  *  6. Copy the web app URL and paste it into your .env.local as VITE_GAS_URL.
  */
 
-var SHEET_ID = "YOUR_GOOGLE_SHEET_ID"; // <-- replace this
+var SHEET_ID = "1tfW0wEgbiEUnAU4dci9LMo6f_lwS2OsF7OwT-_g_cFc"; // <-- replace this
 var OTP_EXPIRY_MINUTES = 10;
 
 function doPost(e) {

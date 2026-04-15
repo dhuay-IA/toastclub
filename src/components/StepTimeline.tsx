@@ -10,6 +10,7 @@ const STEPS = [
 
 interface StepTimelineProps {
   currentStep: string;
+  variant?: "full" | "remaining";
 }
 
 const getStepIndex = (step: string) => {
@@ -26,13 +27,28 @@ const getStepIndex = (step: string) => {
   return map[step] ?? 0;
 };
 
-const StepTimeline = ({ currentStep }: StepTimelineProps) => {
+const getVisibleSteps = (currentStep: string, variant: "full" | "remaining") => {
   const activeIndex = getStepIndex(currentStep);
+
+  if (variant === "full") {
+    return STEPS.filter((step) => step.key !== "login");
+  }
+
+  return STEPS.filter((_, index) => index >= activeIndex);
+};
+
+const StepTimeline = ({
+  currentStep,
+  variant = "remaining",
+}: StepTimelineProps) => {
+  const activeIndex = getStepIndex(currentStep);
+  const visibleSteps = getVisibleSteps(currentStep, variant);
 
   return (
     <div className="w-full max-w-xl mx-auto px-6 py-6">
       <div className="flex items-center gap-1">
-        {STEPS.map((step, idx) => {
+        {visibleSteps.map((step) => {
+          const idx = STEPS.findIndex((item) => item.key === step.key);
           const isDone = idx < activeIndex;
           const isActive = idx === activeIndex;
 
@@ -43,9 +59,9 @@ const StepTimeline = ({ currentStep }: StepTimelineProps) => {
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     isDone
-                      ? "w-full bg-secondary"
+                      ? "w-full bg-primary"
                       : isActive
-                      ? "w-1/2 bg-secondary animate-pulse-glow"
+                      ? "w-1/2 bg-primary animate-pulse-glow"
                       : "w-0"
                   }`}
                 />
@@ -54,9 +70,9 @@ const StepTimeline = ({ currentStep }: StepTimelineProps) => {
               <span
                 className={`text-[10px] font-medium tracking-wider uppercase transition-all duration-300 ${
                   isActive
-                    ? "text-secondary"
+                    ? "text-primary"
                     : isDone
-                    ? "text-muted-foreground/60"
+                    ? "text-primary/70"
                     : "text-muted-foreground/30"
                 }`}
               >

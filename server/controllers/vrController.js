@@ -1,0 +1,201 @@
+import {
+  completeVrSession,
+  createVrSession,
+  findActiveVrSessionByCode,
+  findVrSessionByIdForUser,
+  listVrSessionsByUser,
+} from "../models/vrSessionModel.js";
+
+const parseJsonColumn = (value) => {
+  if (!value) return null;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+};
+
+const serializeSession = (session) => ({
+  id: session.id,
+  userId: session.user_id,
+  sessionCode: session.session_code,
+  vrApp: session.vr_app,
+  scenarioKey: session.scenario_key,
+  status: session.status,
+  metadata: parseJsonColumn(session.metadata_json),
+  result: parseJsonColumn(session.result_json),
+  startedAt: session.started_at,
+  endedAt: session.ended_at,
+  createdAt: session.created_at,
+  updatedAt: session.updated_at,
+});
+
+export const getVrAccess = async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    data: {
+      token: req.headers.authorization?.split(" ")[1] ?? null,
+      user: req.user,
+      apiBaseUrl: process.env.VR_API_BASE_URL || null,
+      recommendedFlow: {
+        startSessionEndpoint: "/api/vr/session",
+        listSessionsEndpoint: "/api/vr/sessions",
+        completeSessionEndpoint: "/api/vr/session/:sessionId/complete",
+        vrPackageByCodeEndpoint: "/api/vr/session-code/:sessionCode/package",
+      },
+    },
+  });
+};
+
+export const startVrSession = async (req, res) => {
+  const { vrApp, scenarioKey, metadata } = req.body;
+
+  if (!vrApp || !scenarioKey) {
+    return res.status(400).json({
+      success: false,
+      message: "vrApp and scenarioKey are required.",
+    });
+  }
+
+  const session = await createVrSession({
+    userId: req.user.id,
+    vrApp: String(vrApp).trim(),
+    scenarioKey: String(scenarioKey).trim(),
+    metadata: metadata ?? null,
+  });
+
+  return res.status(201).json({
+    success: true,
+    message: "VR session created successfully.",
+    data: serializeSession(session),
+  });
+};
+
+const shouldRequireVrAppKey = () => Boolean(process.env.VR_APP_SHARED_SECRET?.trim());
+
+const validateVrAppAccess = (req, res) => {
+  if (!shouldRequireVrAppKey()) {
+    return true;
+  }
+
+  const sharedKey = req.headers["x-vr-app-key"];
+
+  if (sharedKey !== process.env.VR_APP_SHARED_SECRET) {
+    res.status(401).json({
+      success: false,
+      message: "Invalid VR app key.",
+    });
+    return false;
+  }
+
+  return true;
+};
+
+export const getVrSessionPackageByCode = async (req, res) => {
+  if (!validateVrAppAccess(req, res)) {
+    return;
+  }
+
+  const sessionCode = String(req.params.sessionCode || "").trim().toUpperCase();
+
+  if (!sessionCode) {
+    return res.status(400).json({
+      success: false,
+      message: "sessionCode is required.",
+    });
+  }
+
+  const session = await findActiveVrSessionByCode(sessionCode);
+
+  if (!session) {
+    return res.status(404).json({
+      success: false,
+      message: "VR session not found for this code.",
+    });
+  }
+
+  const metadata = parseJsonColumn(session.metadata_json) ?? {};
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      sessionId: session.id,
+      sessionCode: session.session_code,
+      vrApp: session.vr_app,
+      scenarioKey: session.scenario_key,
+      status: session.status,
+      difficulty: metadata.difficulty ?? "medium",
+      duration: metadata.duration ?? metadata.totalMinutes ?? null,
+      totalMinutes: metadata.totalMinutes ?? null,
+      slideCount: metadata.slideCount ?? 0,
+      slideImages: Array.isArray(metadata.slideImages) ? metadata.slideImages : [],
+      fileName: metadata.fileName ?? null,
+      textTitle: metadata.textTitle ?? null,
+      createdAt: session.created_at,
+      startedAt: session.started_at,
+      payload: metadata,
+    },
+  });
+};
+
+export const listMyVrSessions = async (req, res) => {
+  const limit = Number(req.query.limit || 10);
+  const sessions = await listVrSessionsByUser({
+    userId: req.user.id,
+    limit,
+  });
+
+  return res.status(200).json({
+    success: true,
+    data: sessions.map(serializeSession),
+  });
+};
+
+export const getMyVrSession = async (req, res) => {
+  const session = await findVrSessionByIdForUser({
+    sessionId: Number(req.params.sessionId),
+    userId: req.user.id,
+  });
+
+  if (!session) {
+    return res.status(404).json({
+      success: false,
+      message: "VR session not found.",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: serializeSession(session),
+  });
+};
+
+export const finishVrSession = async (req, res) => {
+  const { result } = req.body;
+  const sessionId = Number(req.params.sessionId);
+
+  const existingSession = await findVrSessionByIdForUser({
+    sessionId,
+    userId: req.user.id,
+  });
+
+  if (!existingSession) {
+    return res.status(404).json({
+      success: false,
+      message: "VR session not found.",
+    });
+  }
+
+  const session = await completeVrSession({
+    sessionId,
+    userId: req.user.id,
+    result: result ?? null,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "VR session completed successfully.",
+    data: serializeSession(session),
+  });
+};

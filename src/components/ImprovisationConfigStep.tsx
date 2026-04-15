@@ -21,7 +21,16 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState<string | null>(null);
-  const [duration, setDuration] = useState(3);
+  const [duration, setDuration] = useState("3");
+
+  const normalizeDurationInput = (value: string) => {
+    if (!value) return "";
+
+    const numericValue = value.replace(/\D/g, "");
+    if (!numericValue) return "";
+
+    return String(Number(numericValue));
+  };
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -45,7 +54,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
     onComplete({
       textId: chosen.id,
       textTitle: chosen.title,
-      duration,
+      duration: Number(duration),
     });
   };
 
@@ -128,7 +137,12 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
               min={1}
               max={30}
               value={duration}
-              onChange={(e) => setDuration(Number(e.target.value))}
+              onChange={(e) => setDuration(normalizeDurationInput(e.target.value))}
+              onBlur={() => {
+                if (!duration) {
+                  setDuration("3");
+                }
+              }}
               className="input-field w-24 text-center font-mono"
             />
             <span className="text-sm text-muted-foreground">minutos (recomendado: 3)</span>

@@ -60,6 +60,53 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Backend API
+
+This repo now also includes a Node.js + Express API under [`server/`](./server) for authentication and OTP flows.
+
+### API setup
+
+1. Copy `server/.env.local.example` to `server/.env.local`
+2. Fill in the backend values in `server/.env.local`
+3. Run the SQL in [`server/models/schema.sql`](./server/models/schema.sql)
+4. Start the API with `npm run dev:api`
+
+### Available endpoints
+
+- `POST /api/register`
+- `POST /api/login`
+- `POST /api/send-otp`
+- `POST /api/verify-otp`
+- `GET /api/profile`
+
+## Environment files
+
+- Frontend example: [`.env.local.example`](./.env.local.example)
+- Backend example: [`server/.env.local.example`](./server/.env.local.example)
+
+Do not commit real `.env.local` files or production secrets.
+
+## Deployment notes
+
+This project is split into two parts:
+
+- Frontend (`Vite/React`): can be built with `npm run build` and uploaded from `dist/`
+- Backend (`Node/Express`): must be hosted on a Node-compatible platform
+
+Recommended setup:
+
+- Frontend on SiteGround
+- MySQL database on SiteGround
+- Backend API on a Node-compatible host such as Render or Railway
+
+Production checklist:
+
+1. Set `VITE_API_URL` in the frontend environment to your public API URL
+2. Set backend environment variables from `server/.env.local.example`
+3. Add your admin emails in `ADMIN_EMAILS`
+4. Set `CORS_ORIGIN` to your real frontend domain
+5. Point `VR_API_BASE_URL` to your public backend URL
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
