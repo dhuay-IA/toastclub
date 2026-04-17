@@ -5,6 +5,30 @@ import pool from "./config/db.js";
 
 const port = Number(process.env.PORT || process.env.API_PORT || 4000);
 
+const columnExists = async (tableName, columnName) => {
+  const [rows] = await pool.query(
+    `
+      SELECT 1
+      FROM information_schema.COLUMNS
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = ?
+        AND COLUMN_NAME = ?
+      LIMIT 1
+    `,
+    [tableName, columnName]
+  );
+
+  return Array.isArray(rows) && rows.length > 0;
+};
+
+const addColumnIfMissing = async (tableName, columnName, definition) => {
+  if (await columnExists(tableName, columnName)) {
+    return;
+  }
+
+  await pool.query(`ALTER TABLE ${tableName} ADD COLUMN ${definition}`);
+};
+
 const initializeDatabase = async () => {
   const schemaPath = path.resolve("server/models/schema.sql");
   const schema = await fs.readFile(schemaPath, "utf8");
@@ -17,41 +41,41 @@ const initializeDatabase = async () => {
     await pool.query(statement);
   }
 
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS role ENUM('student', 'admin') NOT NULL DEFAULT 'student'
-    AFTER password_hash
-  `);
+  await addColumnIfMissing(
+    "users",
+    "role",
+    "role ENUM('student', 'admin') NOT NULL DEFAULT 'student' AFTER password_hash"
+  );
 
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS otp_send_count TINYINT UNSIGNED NOT NULL DEFAULT 0
-    AFTER otp_expires_at
-  `);
+  await addColumnIfMissing(
+    "users",
+    "otp_send_count",
+    "otp_send_count TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER otp_expires_at"
+  );
 
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS password_reset_code VARCHAR(6) DEFAULT NULL
-    AFTER otp_send_count
-  `);
+  await addColumnIfMissing(
+    "users",
+    "password_reset_code",
+    "password_reset_code VARCHAR(6) DEFAULT NULL AFTER otp_send_count"
+  );
 
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS password_reset_expires_at DATETIME DEFAULT NULL
-    AFTER password_reset_code
-  `);
+  await addColumnIfMissing(
+    "users",
+    "password_reset_expires_at",
+    "password_reset_expires_at DATETIME DEFAULT NULL AFTER password_reset_code"
+  );
 
-  await pool.query(`
-    ALTER TABLE users
-    ADD COLUMN IF NOT EXISTS password_reset_send_count TINYINT UNSIGNED NOT NULL DEFAULT 0
-    AFTER password_reset_expires_at
-  `);
+  await addColumnIfMissing(
+    "users",
+    "password_reset_send_count",
+    "password_reset_send_count TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER password_reset_expires_at"
+  );
 
-  await pool.query(`
-    ALTER TABLE vr_sessions
-    ADD COLUMN IF NOT EXISTS session_code VARCHAR(32) DEFAULT NULL
-    AFTER user_id
-  `);
+  await addColumnIfMissing(
+    "vr_sessions",
+    "session_code",
+    "session_code VARCHAR(32) DEFAULT NULL AFTER user_id"
+  );
 
   await pool.query(`
     UPDATE vr_sessions
