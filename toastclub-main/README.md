@@ -107,6 +107,10 @@ Production checklist:
 4. Set `CORS_ORIGIN` to your real frontend domain
 5. Point `VR_API_BASE_URL` to your public backend URL
 
+## Railway + PPT/PPTX
+
+If you deploy the backend to Railway and want PPT/PPTX conversion to work, use the included [`Dockerfile`](./Dockerfile) instead of the default Railpack builder. The Docker image installs LibreOffice so the `soffice` command is available to the API.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
