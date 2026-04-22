@@ -1,8 +1,9 @@
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
-// @ts-expect-error Vite resolves the worker asset URL at build time.
-import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 
-GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+GlobalWorkerOptions.workerPort = new Worker(
+  new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
+  { type: "module" }
+);
 
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 
