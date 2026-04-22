@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const isEmailConfigured = () =>
+const isSmtpConfigured = () =>
   Boolean(
     process.env.SMTP_HOST &&
       process.env.SMTP_PORT &&
@@ -9,8 +9,56 @@ const isEmailConfigured = () =>
       process.env.MAIL_FROM
   );
 
+const isBrevoApiConfigured = () =>
+  Boolean(process.env.BREVO_API_KEY && process.env.MAIL_FROM);
+
+const isDevelopment = () => process.env.NODE_ENV === "development";
+
+const shouldAllowDevFallback = () =>
+  process.env.EMAIL_DEV_FALLBACK === "true" || isDevelopment();
+
+export const shouldExposeEmailCodes = () => shouldAllowDevFallback();
+
+const buildEmailError = (error) => {
+  if (error?.code === "ETIMEDOUT") {
+    return new Error(
+      "No se pudo conectar al servidor de correo a tiempo. Revisa la configuracion SMTP o usa la API HTTP de Brevo si tu hosting bloquea SMTP saliente."
+    );
+  }
+
+  if (error?.code === "EAUTH") {
+    return new Error(
+      "El servidor SMTP rechazo las credenciales. Revisa SMTP_USER y SMTP_PASSWORD."
+    );
+  }
+
+  return error;
+};
+
+const parseMailFrom = () => {
+  const value = process.env.MAIL_FROM?.trim();
+
+  if (!value) {
+    throw new Error("MAIL_FROM no esta configurado.");
+  }
+
+  const match = value.match(/^(?:"?([^"]*)"?\s)?<([^>]+)>$/);
+
+  if (match) {
+    return {
+      name: match[1]?.trim() || undefined,
+      email: match[2].trim(),
+    };
+  }
+
+  return {
+    name: undefined,
+    email: value,
+  };
+};
+
 const createTransporter = () => {
-  if (!isEmailConfigured()) {
+  if (!isSmtpConfigured()) {
     throw new Error(
       "SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, and MAIL_FROM."
     );
@@ -24,11 +72,77 @@ const createTransporter = () => {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
     },
+    connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT || 10000),
+    greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT || 10000),
+    socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT || 20000),
   });
 };
 
-export const sendOtpEmail = async ({ to, name, otp, expiresInMinutes }) => {
+const sendWithBrevoApi = async ({ to, subject, text, html }) => {
+  if (!isBrevoApiConfigured()) {
+    throw new Error("Brevo API no esta configurada.");
+  }
+
+  const sender = parseMailFrom();
+  const response = await fetch(
+    process.env.BREVO_API_BASE_URL || "https://api.brevo.com/v3/smtp/email",
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+      },
+      body: JSON.stringify({
+        sender,
+        to: [{ email: to }],
+        subject,
+        textContent: text,
+        htmlContent: html,
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    throw new Error(
+      `Brevo API rechazo el envio (${response.status}). ${responseText || "Sin detalle adicional."}`
+    );
+  }
+};
+
+const sendWithSmtp = async (message) => {
   const transporter = createTransporter();
+  await transporter.sendMail(message);
+};
+
+const sendEmail = async ({ debugLabel, debugCode, ...message }) => {
+  try {
+    if (isBrevoApiConfigured()) {
+      await sendWithBrevoApi(message);
+      return;
+    }
+
+    await sendWithSmtp(message);
+  } catch (error) {
+    const normalizedError = buildEmailError(error);
+
+    if (shouldAllowDevFallback()) {
+      console.warn(
+        `[email] No se pudo enviar "${debugLabel}". Se habilito fallback de desarrollo.`
+      );
+      console.warn(normalizedError);
+      if (debugCode) {
+        console.warn(`[email] Codigo de desarrollo para ${message.to}: ${debugCode}`);
+      }
+      return;
+    }
+
+    throw normalizedError;
+  }
+};
+
+export const sendOtpEmail = async ({ to, name, otp, expiresInMinutes }) => {
   const appName = process.env.MAIL_APP_NAME || "ToastClub";
   const subject = `${appName}: tu codigo de verificacion`;
   const safeName = name?.trim() || "usuario";
@@ -54,7 +168,9 @@ export const sendOtpEmail = async ({ to, name, otp, expiresInMinutes }) => {
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendEmail({
+    debugLabel: "codigo OTP",
+    debugCode: otp,
     from: process.env.MAIL_FROM,
     to,
     subject,
@@ -69,7 +185,6 @@ export const sendPasswordResetEmail = async ({
   code,
   expiresInMinutes,
 }) => {
-  const transporter = createTransporter();
   const appName = process.env.MAIL_APP_NAME || "ToastClub";
   const subject = `${appName}: restablece tu contrasena`;
   const safeName = name?.trim() || "usuario";
@@ -95,7 +210,9 @@ export const sendPasswordResetEmail = async ({
     </div>
   `;
 
-  await transporter.sendMail({
+  await sendEmail({
+    debugLabel: "codigo de recuperacion",
+    debugCode: code,
     from: process.env.MAIL_FROM,
     to,
     subject,
@@ -105,5 +222,6 @@ export const sendPasswordResetEmail = async ({
 };
 
 export const emailConfigStatus = () => ({
-  configured: isEmailConfigured(),
+  configured: isBrevoApiConfigured() || isSmtpConfigured(),
+  provider: isBrevoApiConfigured() ? "brevo-api" : isSmtpConfigured() ? "smtp" : null,
 });

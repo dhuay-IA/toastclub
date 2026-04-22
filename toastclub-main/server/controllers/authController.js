@@ -16,6 +16,7 @@ import {
   emailConfigStatus,
   sendOtpEmail,
   sendPasswordResetEmail,
+  shouldExposeEmailCodes,
 } from "../services/emailService.js";
 
 const OTP_EXPIRY_MINUTES = 10;
@@ -257,7 +258,7 @@ export const sendOtp = async (req, res) => {
         0
       ),
       emailDeliveryConfigured: emailConfigStatus().configured,
-      ...(process.env.NODE_ENV === "development" ? { otp } : {}),
+      ...(shouldExposeEmailCodes() ? { otp } : {}),
     },
   });
 };
@@ -376,7 +377,7 @@ export const forgotPassword = async (req, res) => {
         PASSWORD_RESET_MAX_SENDS - ((user.password_reset_send_count ?? 0) + 1),
         0
       ),
-      ...(process.env.NODE_ENV === "development" ? { code } : {}),
+      ...(shouldExposeEmailCodes() ? { code } : {}),
     },
   });
 };

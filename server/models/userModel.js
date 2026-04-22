@@ -77,21 +77,21 @@ export const verifyUserOtp = async ({ userId, otp }) => {
   if (!user || !user.otp_code || !user.otp_expires_at) {
     return {
       success: false,
-      message: "No active OTP found for this user.",
+      message: "No hay un codigo OTP activo para este usuario.",
     };
   }
 
   if (user.otp_code !== otp) {
     return {
       success: false,
-      message: "Invalid OTP.",
+      message: "El codigo OTP no es valido.",
     };
   }
 
   if (new Date(user.otp_expires_at).getTime() < Date.now()) {
     return {
       success: false,
-      message: "OTP has expired.",
+      message: "El codigo OTP ya vencio.",
     };
   }
 
