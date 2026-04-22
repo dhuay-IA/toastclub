@@ -22,13 +22,13 @@ export const shouldExposeEmailCodes = () => shouldAllowDevFallback();
 const buildEmailError = (error) => {
   if (error?.code === "ETIMEDOUT") {
     return new Error(
-      "No se pudo conectar al servidor de correo a tiempo. Revisa la configuracion SMTP o usa la API HTTP de Brevo si tu hosting bloquea SMTP saliente."
+      "No se pudo conectar al servidor de correo a tiempo. Revisa la configuración SMTP o usa la API HTTP de Brevo si tu hosting bloquea SMTP saliente."
     );
   }
 
   if (error?.code === "EAUTH") {
     return new Error(
-      "El servidor SMTP rechazo las credenciales. Revisa SMTP_USER y SMTP_PASSWORD."
+      "El servidor SMTP rechazó las credenciales. Revisa SMTP_USER y SMTP_PASSWORD."
     );
   }
 
@@ -39,7 +39,7 @@ const parseMailFrom = () => {
   const value = process.env.MAIL_FROM?.trim();
 
   if (!value) {
-    throw new Error("MAIL_FROM no esta configurado.");
+    throw new Error("MAIL_FROM no está configurado.");
   }
 
   const match = value.match(/^(?:"?([^"]*)"?\s)?<([^>]+)>$/);
@@ -67,7 +67,9 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === "true" || Number(process.env.SMTP_PORT) === 465,
+    secure:
+      process.env.SMTP_SECURE === "true" ||
+      Number(process.env.SMTP_PORT) === 465,
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASSWORD,
@@ -80,7 +82,7 @@ const createTransporter = () => {
 
 const sendWithBrevoApi = async ({ to, subject, text, html }) => {
   if (!isBrevoApiConfigured()) {
-    throw new Error("Brevo API no esta configurada.");
+    throw new Error("La API de Brevo no está configurada.");
   }
 
   const sender = parseMailFrom();
@@ -106,7 +108,7 @@ const sendWithBrevoApi = async ({ to, subject, text, html }) => {
   if (!response.ok) {
     const responseText = await response.text();
     throw new Error(
-      `Brevo API rechazo el envio (${response.status}). ${responseText || "Sin detalle adicional."}`
+      `La API de Brevo rechazó el envío (${response.status}). ${responseText || "Sin detalle adicional."}`
     );
   }
 };
@@ -129,11 +131,11 @@ const sendEmail = async ({ debugLabel, debugCode, ...message }) => {
 
     if (shouldAllowDevFallback()) {
       console.warn(
-        `[email] No se pudo enviar "${debugLabel}". Se habilito fallback de desarrollo.`
+        `[email] No se pudo enviar "${debugLabel}". Se habilitó el fallback de desarrollo.`
       );
       console.warn(normalizedError);
       if (debugCode) {
-        console.warn(`[email] Codigo de desarrollo para ${message.to}: ${debugCode}`);
+        console.warn(`[email] Código de desarrollo para ${message.to}: ${debugCode}`);
       }
       return;
     }
@@ -144,32 +146,32 @@ const sendEmail = async ({ debugLabel, debugCode, ...message }) => {
 
 export const sendOtpEmail = async ({ to, name, otp, expiresInMinutes }) => {
   const appName = process.env.MAIL_APP_NAME || "ToastClub";
-  const subject = `${appName}: tu codigo de verificacion`;
+  const subject = `${appName}: tu código de verificación`;
   const safeName = name?.trim() || "usuario";
 
   const text = [
     `Hola ${safeName},`,
     "",
-    `Tu codigo de verificación para ${appName} es: ${otp}`,
-    `Este codigo vence en ${expiresInMinutes} minutos.`,
+    `Tu código de verificación para ${appName} es: ${otp}`,
+    `Este código vence en ${expiresInMinutes} minutos.`,
     "",
-    "Si no solicitaste este codigo, puedes ignorar este correo.",
+    "Si no solicitaste este código, puedes ignorar este correo.",
   ].join("\n");
 
   const html = `
     <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
       <p>Hola <strong>${safeName}</strong>,</p>
-      <p>Tu codigo OTP para <strong>${appName}</strong> es:</p>
+      <p>Tu código OTP para <strong>${appName}</strong> es:</p>
       <p style="font-size: 28px; font-weight: 700; letter-spacing: 6px; margin: 20px 0;">
         ${otp}
       </p>
-      <p>Este codigo vence en <strong>${expiresInMinutes} minutos</strong>.</p>
-      <p>Si no solicitaste este codigo, puedes ignorar este correo.</p>
+      <p>Este código vence en <strong>${expiresInMinutes} minutos</strong>.</p>
+      <p>Si no solicitaste este código, puedes ignorar este correo.</p>
     </div>
   `;
 
   await sendEmail({
-    debugLabel: "codigo OTP",
+    debugLabel: "código OTP",
     debugCode: otp,
     from: process.env.MAIL_FROM,
     to,
@@ -186,14 +188,14 @@ export const sendPasswordResetEmail = async ({
   expiresInMinutes,
 }) => {
   const appName = process.env.MAIL_APP_NAME || "ToastClub";
-  const subject = `${appName}: restablece tu contrasena`;
+  const subject = `${appName}: restablece tu contraseña`;
   const safeName = name?.trim() || "usuario";
 
   const text = [
     `Hola ${safeName},`,
     "",
-    `Tu codigo para restablecer la contrasena de ${appName} es: ${code}`,
-    `Este codigo vence en ${expiresInMinutes} minutos.`,
+    `Tu código para restablecer la contraseña de ${appName} es: ${code}`,
+    `Este código vence en ${expiresInMinutes} minutos.`,
     "",
     "Si no solicitaste este cambio, ignora este correo.",
   ].join("\n");
@@ -201,17 +203,17 @@ export const sendPasswordResetEmail = async ({
   const html = `
     <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
       <p>Hola <strong>${safeName}</strong>,</p>
-      <p>Tu codigo para restablecer la contrasena de <strong>${appName}</strong> es:</p>
+      <p>Tu código para restablecer la contraseña de <strong>${appName}</strong> es:</p>
       <p style="font-size: 28px; font-weight: 700; letter-spacing: 6px; margin: 20px 0;">
         ${code}
       </p>
-      <p>Este codigo vence en <strong>${expiresInMinutes} minutos</strong>.</p>
+      <p>Este código vence en <strong>${expiresInMinutes} minutos</strong>.</p>
       <p>Si no solicitaste este cambio, ignora este correo.</p>
     </div>
   `;
 
   await sendEmail({
-    debugLabel: "codigo de recuperacion",
+    debugLabel: "código de recuperación",
     debugCode: code,
     from: process.env.MAIL_FROM,
     to,

@@ -40,7 +40,7 @@ const getAuthProvider = () => {
   }
 
   throw new Error(
-    "Configura VITE_API_URL o un VITE_GAS_URL valido en .env.local para usar el inicio de sesion."
+    "Configura VITE_API_URL o un VITE_GAS_URL válido en .env.local para usar el inicio de sesión."
   );
 };
 
@@ -69,7 +69,7 @@ async function postToApi(path: string, payload: object): Promise<AuthResponse> {
     return {
       success: false,
       message:
-        "No se pudo conectar con el servidor. Verifica que la API este corriendo en " +
+        "No se pudo conectar con el servidor. Verifica que la API esté corriendo en " +
         `${baseUrl}.`,
     };
   }
@@ -93,7 +93,7 @@ async function getFromApi<T>(path: string, token: string): Promise<AuthResponse>
   const { baseUrl, type } = getAuthProvider();
 
   if (type !== "api") {
-    throw new Error("Esta operacion requiere VITE_API_URL.");
+    throw new Error("Esta operación requiere VITE_API_URL.");
   }
 
   let res: Response;
@@ -108,7 +108,7 @@ async function getFromApi<T>(path: string, token: string): Promise<AuthResponse>
     return {
       success: false,
       message:
-        "No se pudo conectar con el servidor. Verifica que la API este corriendo en " +
+        "No se pudo conectar con el servidor. Verifica que la API esté corriendo en " +
         `${baseUrl}.`,
     };
   }
@@ -137,7 +137,7 @@ async function postToAuthenticatedApi<T>(
   const { baseUrl, type } = getAuthProvider();
 
   if (type !== "api") {
-    throw new Error("Esta operacion requiere VITE_API_URL.");
+    throw new Error("Esta operación requiere VITE_API_URL.");
   }
 
   let res: Response;
@@ -155,7 +155,7 @@ async function postToAuthenticatedApi<T>(
     return {
       success: false,
       message:
-        "No se pudo conectar con el servidor. Verifica que la API este corriendo en " +
+        "No se pudo conectar con el servidor. Verifica que la API esté corriendo en " +
         `${baseUrl}.`,
     };
   }
@@ -210,7 +210,7 @@ export function registerUser(email: string, name: string, password: string) {
   const provider = getAuthProvider();
 
   if (provider.type !== "api") {
-    throw new Error("El registro con contrasena requiere VITE_API_URL.");
+    throw new Error("El registro con contraseña requiere VITE_API_URL.");
   }
 
   return postToApi("/api/register", { email, name, password });
@@ -220,7 +220,7 @@ export function loginUser(email: string, password: string) {
   const provider = getAuthProvider();
 
   if (provider.type !== "api") {
-    throw new Error("El inicio de sesion con contrasena requiere VITE_API_URL.");
+    throw new Error("El inicio de sesión con contraseña requiere VITE_API_URL.");
   }
 
   return postToApi("/api/login", { email, password });
@@ -230,7 +230,7 @@ export function requestPasswordReset(email: string) {
   const provider = getAuthProvider();
 
   if (provider.type !== "api") {
-    throw new Error("La recuperacion de contrasena requiere VITE_API_URL.");
+    throw new Error("La recuperación de contraseña requiere VITE_API_URL.");
   }
 
   return postToApi("/api/forgot-password", { email });
@@ -240,7 +240,7 @@ export function resetPassword(email: string, code: string, password: string) {
   const provider = getAuthProvider();
 
   if (provider.type !== "api") {
-    throw new Error("La recuperacion de contrasena requiere VITE_API_URL.");
+    throw new Error("La recuperación de contraseña requiere VITE_API_URL.");
   }
 
   return postToApi("/api/reset-password", { email, code, password });

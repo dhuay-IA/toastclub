@@ -66,7 +66,7 @@ const LoginStep = ({
 
           onLoginSuccess(email, authData?.user?.name, authData?.token, authData?.user?.role);
         } else {
-          setError(res.message || "No se pudo iniciar sesion. Intentalo de nuevo.");
+          setError(res.message || "No se pudo iniciar sesión. Inténtalo de nuevo.");
         }
       } else {
         const registerRes = await registerUser(email, name.trim(), password);
@@ -80,7 +80,7 @@ const LoginStep = ({
 
         if (!otpRes.success) {
           setError(
-            otpRes.message || "La cuenta se creo, pero no se pudo enviar el codigo."
+            otpRes.message || "La cuenta se creó, pero no se pudo enviar el código."
           );
           return;
         }
@@ -91,7 +91,7 @@ const LoginStep = ({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Error de conexion. Intentalo de nuevo."
+          : "Error de conexión. Inténtalo de nuevo."
       );
     } finally {
       setLoading(false);
@@ -108,17 +108,17 @@ const LoginStep = ({
       const res = await requestPasswordReset(email);
 
       if (!res.success) {
-        setError(res.message || "No se pudo enviar el código de recuperacion.");
+        setError(res.message || "No se pudo enviar el código de recuperación.");
         return;
       }
 
       setResetCodeSent(true);
-      setInfo("Te enviamos un código para restablecer tu contrasena.");
+      setInfo("Te enviamos un código para restablecer tu contraseña.");
     } catch (submitError) {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Error de conexión. Intentalo de nuevo."
+          : "Error de conexión. Inténtalo de nuevo."
       );
     } finally {
       setLoading(false);
@@ -199,7 +199,7 @@ const LoginStep = ({
           {!isRecoveringPassword && !isLogin && (
             <div>
               <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                Nombre Completo
+                Nombre completo
               </label>
               <input
                 type="text"
@@ -217,7 +217,7 @@ const LoginStep = ({
 
           <div>
             <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Email
+              Correo electrónico
             </label>
             <input
               type="email"
@@ -335,7 +335,7 @@ const LoginStep = ({
             <p className="mt-4 text-center text-xs text-muted-foreground">
               {isLogin
                 ? "Ingresa con tu correo y contraseña."
-                : "Despues del registro te enviaremos un código de verificación."}
+                : "Después del registro te enviaremos un código de verificación."}
             </p>
 
             {isLogin && (
@@ -351,7 +351,7 @@ const LoginStep = ({
                 }}
                 className="mt-3 block w-full text-center text-xs text-secondary transition-colors hover:text-primary"
               >
-                Olvide mi contraseña
+                Olvidé mi contraseña
               </button>
             )}
           </>
@@ -390,8 +390,8 @@ const LoginStep = ({
             className="mt-3 block w-full text-center text-xs text-muted-foreground transition-colors hover:text-secondary"
           >
             {isLogin
-              ? "No tienes cuenta? Registrate aquí"
-              : "Ya tienes cuenta? Iniciar sesión"}
+              ? "¿No tienes cuenta? Regístrate aquí"
+              : "¿Ya tienes cuenta? Iniciar sesión"}
           </button>
         )}
       </div>
