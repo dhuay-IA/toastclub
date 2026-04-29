@@ -42,17 +42,17 @@ const SessionReadyStep = ({
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/10">
             <span className="text-2xl">VR</span>
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Sesión creada</h2>
+          <h2 className="text-lg font-semibold text-foreground">Sesion lista</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             La práctica ya quedó registrada. El acceso a VR se gestiona internamente.
           </p>
         </div>
 
-        <div className="mb-6 rounded-2xl border border-secondary/20 bg-secondary/5 p-4 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-            Código de sesión
+        <div className="mb-6 flex items-center justify-between gap-4 border-2 border-red-600 bg-red-50/40 px-3 py-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-700">
+            ID de sesion
           </p>
-          <p className="mt-2 text-xl font-semibold tracking-[0.2em] text-foreground">
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-red-700">
             {sessionCode}
           </p>
         </div>
