@@ -249,7 +249,7 @@ const DashboardStep = ({
                     onClick={() => onOpenFeedback(sessionSummary.id)}
                     className="flex-1 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
                   >
-                    {feedbackComplete(sessionSummary) ? "Editar feedback" : "Completar feedback"}
+                    {feedbackComplete(sessionSummary.feedback) ? "Editar feedback" : "Completar feedback"}
                   </button>
                 </div>
               </div>

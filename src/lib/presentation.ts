@@ -38,10 +38,10 @@ const renderPdfBufferToImages = async (buffer: ArrayBuffer) => {
     canvas.height = Math.ceil(viewport.height);
 
     await page.render({
+      canvas,
       canvasContext: context,
       viewport,
     }).promise;
-
     images.push(canvas.toDataURL("image/png"));
   }
 

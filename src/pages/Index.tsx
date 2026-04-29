@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import LandingPage from "@/components/LandingPage";
 import LoginStep from "@/components/LoginStep";
 import OTPStep from "@/components/OTPStep";
@@ -99,35 +99,38 @@ const Index = () => {
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportError, setAdminReportError] = useState("");
 
-  const mapApiSessionToRecord = (session: {
-    id: number;
-    sessionCode: string;
-    vrApp: "presentation" | "improvisation";
-    metadata: {
-      difficulty?: "easy" | "medium" | "hard";
-      duration?: number;
-      totalMinutes?: number;
-      fileName?: string;
-      slideCount?: number;
-      slideImages?: string[];
-      textTitle?: string;
-    } | null;
-    videoUrl?: string | null;
-    createdAt: string;
-  }): SessionRecord => ({
-    id: String(session.id),
-    email,
-    mode: session.vrApp === "presentation" ? "presentation" : "improvisation",
-    difficulty: session.metadata?.difficulty ?? "medium",
-    createdAt: session.createdAt,
-    videoUrl: session.videoUrl ?? null,
-    fileName: session.metadata?.fileName,
-    totalMinutes: session.metadata?.totalMinutes,
-    slideCount: session.metadata?.slideCount,
-    previewImage: session.metadata?.slideImages?.[0],
-    textTitle: session.metadata?.textTitle,
-    duration: session.metadata?.duration,
-  });
+  const mapApiSessionToRecord = useCallback(
+    (session: {
+      id: number;
+      sessionCode: string;
+      vrApp: "presentation" | "improvisation";
+      metadata: {
+        difficulty?: "easy" | "medium" | "hard";
+        duration?: number;
+        totalMinutes?: number;
+        fileName?: string;
+        slideCount?: number;
+        slideImages?: string[];
+        textTitle?: string;
+      } | null;
+      videoUrl?: string | null;
+      createdAt: string;
+    }): SessionRecord => ({
+      id: String(session.id),
+      email,
+      mode: session.vrApp === "presentation" ? "presentation" : "improvisation",
+      difficulty: session.metadata?.difficulty ?? "medium",
+      createdAt: session.createdAt,
+      videoUrl: session.videoUrl ?? null,
+      fileName: session.metadata?.fileName,
+      totalMinutes: session.metadata?.totalMinutes,
+      slideCount: session.metadata?.slideCount,
+      previewImage: session.metadata?.slideImages?.[0],
+      textTitle: session.metadata?.textTitle,
+      duration: session.metadata?.duration,
+    }),
+    [email]
+  );
 
   useEffect(() => {
     const savedEmail = localStorage.getItem(SESSION_KEY);
@@ -166,7 +169,7 @@ const Index = () => {
       setAllSessions([]);
       setSessionHistory([]);
     }
-  }, [email]);
+  }, [authToken, email]);
 
   useEffect(() => {
     if (!authToken || !email) {
@@ -206,7 +209,7 @@ const Index = () => {
     return () => {
       cancelled = true;
     };
-  }, [authToken, email]);
+  }, [authToken, email, mapApiSessionToRecord]);
 
   useEffect(() => {
     if (!authToken) {
