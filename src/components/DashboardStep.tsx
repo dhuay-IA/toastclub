@@ -12,7 +12,7 @@ export type SessionSummary = {
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
   createdAt: string;
-  videoUrl: string;
+  videoUrl?: string | null;
   feedback?: SessionFeedback;
   fileName?: string;
   totalMinutes?: number;
@@ -231,14 +231,20 @@ const DashboardStep = ({
                 </div>
 
                 <div className="flex gap-3">
-                  <a
-                    href={sessionSummary.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex flex-1 items-center justify-center rounded-lg border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
-                  >
-                    Ver video
-                  </a>
+                  {sessionSummary.videoUrl ? (
+                    <a
+                      href={sessionSummary.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex flex-1 items-center justify-center rounded-lg border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                    >
+                      Ver video
+                    </a>
+                  ) : (
+                    <div className="inline-flex flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                      Video pendiente
+                    </div>
+                  )}
                   <button
                     onClick={() => onOpenFeedback(sessionSummary.id)}
                     className="flex-1 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
@@ -310,15 +316,21 @@ const DashboardStep = ({
                   </div>
 
                   <div className="mt-auto flex items-stretch gap-3 pt-4">
-                    <a
-                      href={session.videoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
-                    >
-                      <PlayCircle className="h-4 w-4" />
-                      Video
-                    </a>
+                    {session.videoUrl ? (
+                      <a
+                        href={session.videoUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                        Video
+                      </a>
+                    ) : (
+                      <div className="inline-flex flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+                        Video pendiente
+                      </div>
+                    )}
                     <button
                       onClick={() => onOpenFeedback(session.id)}
                       className="flex-1 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"

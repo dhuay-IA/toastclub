@@ -14,7 +14,7 @@ import PresentationConfigStep from "@/components/PresentationConfigStep";
 import DifficultyStep from "@/components/DifficultyStep";
 import SessionReadyStep from "@/components/SessionReadyStep";
 import StepTimeline from "@/components/StepTimeline";
-import { getAdminReport, getProfile } from "@/lib/auth";
+import { getAdminReport, getProfile, getVrSessions } from "@/lib/auth";
 import { createPracticeSession } from "@/lib/vr";
 
 type FlowStep =
@@ -99,6 +99,36 @@ const Index = () => {
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportError, setAdminReportError] = useState("");
 
+  const mapApiSessionToRecord = (session: {
+    id: number;
+    sessionCode: string;
+    vrApp: "presentation" | "improvisation";
+    metadata: {
+      difficulty?: "easy" | "medium" | "hard";
+      duration?: number;
+      totalMinutes?: number;
+      fileName?: string;
+      slideCount?: number;
+      slideImages?: string[];
+      textTitle?: string;
+    } | null;
+    videoUrl?: string | null;
+    createdAt: string;
+  }): SessionRecord => ({
+    id: String(session.id),
+    email,
+    mode: session.vrApp === "presentation" ? "presentation" : "improvisation",
+    difficulty: session.metadata?.difficulty ?? "medium",
+    createdAt: session.createdAt,
+    videoUrl: session.videoUrl ?? null,
+    fileName: session.metadata?.fileName,
+    totalMinutes: session.metadata?.totalMinutes,
+    slideCount: session.metadata?.slideCount,
+    previewImage: session.metadata?.slideImages?.[0],
+    textTitle: session.metadata?.textTitle,
+    duration: session.metadata?.duration,
+  });
+
   useEffect(() => {
     const savedEmail = localStorage.getItem(SESSION_KEY);
     const savedName = localStorage.getItem(SESSION_NAME_KEY);
@@ -109,6 +139,10 @@ const Index = () => {
   }, []);
 
   useEffect(() => {
+    if (authToken) {
+      return;
+    }
+
     const stored = localStorage.getItem(SESSION_HISTORY_KEY);
     if (!stored) {
       setAllSessions([]);
@@ -133,6 +167,46 @@ const Index = () => {
       setSessionHistory([]);
     }
   }, [email]);
+
+  useEffect(() => {
+    if (!authToken || !email) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      const res = await getVrSessions(authToken);
+
+      if (cancelled || !res.success) {
+        return;
+      }
+
+      const sessions = ((res.data as Array<{
+        id: number;
+        sessionCode: string;
+        vrApp: "presentation" | "improvisation";
+        metadata: {
+          difficulty?: "easy" | "medium" | "hard";
+          duration?: number;
+          totalMinutes?: number;
+          fileName?: string;
+          slideCount?: number;
+          slideImages?: string[];
+          textTitle?: string;
+        } | null;
+        videoUrl?: string | null;
+        createdAt: string;
+      }>) ?? []).map(mapApiSessionToRecord);
+
+      setSessionHistory(sessions);
+      setAllSessions(sessions);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authToken, email]);
 
   useEffect(() => {
     if (!authToken) {
@@ -344,12 +418,12 @@ const Index = () => {
     setSessionId(newSessionId);
 
     const newSession: SessionRecord = {
-      id: newSessionId,
+      id: creation.sessionId || newSessionId,
       email,
       mode,
       difficulty: selectedDifficulty,
       createdAt: creation.createdAt,
-      videoUrl: creation.videoUrl,
+      videoUrl: creation.videoUrl ?? null,
       fileName,
       totalMinutes,
       slideCount,
@@ -358,19 +432,32 @@ const Index = () => {
       duration,
     };
 
-    const stored = localStorage.getItem(SESSION_HISTORY_KEY);
-    const parsed = stored ? (JSON.parse(stored) as SessionRecord[]) : [];
-    const nextHistory = [newSession, ...parsed];
+    if (authToken) {
+      setSessionHistory((current) =>
+        [newSession, ...current].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
+      setAllSessions((current) =>
+        [newSession, ...current].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
+    } else {
+      const stored = localStorage.getItem(SESSION_HISTORY_KEY);
+      const parsed = stored ? (JSON.parse(stored) as SessionRecord[]) : [];
+      const nextHistory = [newSession, ...parsed];
 
-    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(nextHistory));
-    setAllSessions(
-      nextHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    );
-    setSessionHistory(
-      nextHistory
-        .filter((session) => session.email === email)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    );
+      localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(nextHistory));
+      setAllSessions(
+        nextHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+      setSessionHistory(
+        nextHistory
+          .filter((session) => session.email === email)
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    }
     setCurrentStep("ready");
   };
 

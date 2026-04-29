@@ -65,7 +65,7 @@ export const register = async (req, res) => {
   if (!email || !name || !password) {
     return res.status(400).json({
       success: false,
-      message: "El correo, el nombre y la contrasena son obligatorios.",
+      message: "El correo, el nombre y la contraseña son obligatorios.",
     });
   }
 
@@ -75,7 +75,7 @@ export const register = async (req, res) => {
   if (!emailPattern.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Se requiere un correo valido.",
+      message: "Se requiere un correo válido.",
     });
   }
 
@@ -89,7 +89,7 @@ export const register = async (req, res) => {
   if (password.length < 8) {
     return res.status(400).json({
       success: false,
-      message: "La contrasena debe tener al menos 8 caracteres.",
+      message: "La contraseña debe tener al menos 8 caracteres.",
     });
   }
 
@@ -129,7 +129,7 @@ export const login = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({
       success: false,
-      message: "El correo y la contrasena son obligatorios.",
+      message: "El correo y la contraseña son obligatorios.",
     });
   }
 
@@ -138,7 +138,7 @@ export const login = async (req, res) => {
   if (!emailPattern.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Se requiere un correo valido.",
+      message: "Se requiere un correo válido.",
     });
   }
 
@@ -147,7 +147,7 @@ export const login = async (req, res) => {
   if (!user) {
     return res.status(401).json({
       success: false,
-      message: "Credenciales invalidas.",
+      message: "Credenciales inválidas.",
     });
   }
 
@@ -156,14 +156,14 @@ export const login = async (req, res) => {
   if (!passwordMatches) {
     return res.status(401).json({
       success: false,
-      message: "Credenciales invalidas.",
+      message: "Credenciales inválidas.",
     });
   }
 
   if (!user.is_verified) {
     return res.status(403).json({
       success: false,
-      message: "La cuenta aun no esta verificada. Completa la verificacion por OTP.",
+      message: "La cuenta aún no está verificada. Completa la verificación por OTP.",
     });
   }
 
@@ -172,7 +172,7 @@ export const login = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "Inicio de sesion correcto.",
+    message: "Inicio de sesión correcto.",
     data: {
       token,
       user: {
@@ -201,7 +201,7 @@ export const sendOtp = async (req, res) => {
   if (!emailPattern.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Se requiere un correo valido.",
+      message: "Se requiere un correo válido.",
     });
   }
 
@@ -210,14 +210,14 @@ export const sendOtp = async (req, res) => {
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "No se encontro el usuario. Primero crea una cuenta.",
+      message: "No se encontró el usuario. Primero crea una cuenta.",
     });
   }
 
   if (user.is_verified) {
     return res.status(400).json({
       success: false,
-      message: "Esta cuenta ya esta verificada. Inicia sesion.",
+      message: "Esta cuenta ya está verificada. Inicia sesión.",
     });
   }
 
@@ -225,7 +225,7 @@ export const sendOtp = async (req, res) => {
     return res.status(429).json({
       success: false,
       message:
-        "Alcanzaste el maximo de solicitudes OTP para este correo. Registra otra cuenta con un correo distinto.",
+        "Alcanzaste el máximo de solicitudes OTP para este correo. Registra otra cuenta con un correo distinto.",
     });
   }
 
@@ -247,7 +247,7 @@ export const sendOtp = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "El codigo OTP se genero y envio correctamente.",
+    message: "El código OTP se generó y envió correctamente.",
     data: {
       email: user.email,
       expiresAt: expiresAt.toISOString(),
@@ -269,7 +269,7 @@ export const verifyOtp = async (req, res) => {
   if (!email || !otp) {
     return res.status(400).json({
       success: false,
-      message: "El correo y el codigo OTP son obligatorios.",
+      message: "El correo y el código OTP son obligatorios.",
     });
   }
 
@@ -278,7 +278,7 @@ export const verifyOtp = async (req, res) => {
   if (!emailPattern.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Se requiere un correo valido.",
+      message: "Se requiere un correo válido.",
     });
   }
 
@@ -287,7 +287,7 @@ export const verifyOtp = async (req, res) => {
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "No se encontro el usuario.",
+      message: "No se encontró el usuario.",
     });
   }
 
@@ -305,7 +305,7 @@ export const verifyOtp = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "El codigo OTP fue verificado correctamente.",
+    message: "El código OTP fue verificado correctamente.",
     data: {
       email: user.email,
       isVerified: true,
@@ -328,7 +328,7 @@ export const forgotPassword = async (req, res) => {
   if (!emailPattern.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Se requiere un correo valido.",
+      message: "Se requiere un correo válido.",
     });
   }
 
@@ -337,7 +337,7 @@ export const forgotPassword = async (req, res) => {
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "No se encontro ninguna cuenta con ese correo.",
+      message: "No se encontró ninguna cuenta con ese correo.",
     });
   }
 
@@ -345,7 +345,7 @@ export const forgotPassword = async (req, res) => {
     return res.status(429).json({
       success: false,
       message:
-        "Alcanzaste el maximo de solicitudes para restablecer la contrasena. Intentalo mas tarde o contacta soporte.",
+        "Alcanzaste el máximo de solicitudes para restablecer la contraseña. Inténtalo más tarde o contacta a soporte.",
     });
   }
 
@@ -369,7 +369,7 @@ export const forgotPassword = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "El codigo para restablecer la contrasena se envio correctamente.",
+    message: "El código para restablecer la contraseña se envió correctamente.",
     data: {
       email: user.email,
       expiresAt: expiresAt.toISOString(),
@@ -388,7 +388,7 @@ export const resetPassword = async (req, res) => {
   if (!email || !code || !password) {
     return res.status(400).json({
       success: false,
-      message: "El correo, el codigo y la contrasena son obligatorios.",
+      message: "El correo, el código y la contraseña son obligatorios.",
     });
   }
 
@@ -397,14 +397,14 @@ export const resetPassword = async (req, res) => {
   if (!emailPattern.test(normalizedEmail)) {
     return res.status(400).json({
       success: false,
-      message: "Se requiere un correo valido.",
+      message: "Se requiere un correo válido.",
     });
   }
 
   if (password.length < 8) {
     return res.status(400).json({
       success: false,
-      message: "La contrasena debe tener al menos 8 caracteres.",
+      message: "La contraseña debe tener al menos 8 caracteres.",
     });
   }
 
@@ -413,7 +413,7 @@ export const resetPassword = async (req, res) => {
   if (!user) {
     return res.status(404).json({
       success: false,
-      message: "No se encontro el usuario.",
+      message: "No se encontró el usuario.",
     });
   }
 
@@ -427,14 +427,14 @@ export const resetPassword = async (req, res) => {
   if (user.password_reset_code !== String(code).trim()) {
     return res.status(400).json({
       success: false,
-      message: "El codigo de restablecimiento no es valido.",
+      message: "El código de restablecimiento no es válido.",
     });
   }
 
   if (new Date(user.password_reset_expires_at).getTime() < Date.now()) {
     return res.status(400).json({
       success: false,
-      message: "El codigo de restablecimiento ya vencio.",
+      message: "El código de restablecimiento ya venció.",
     });
   }
 
@@ -456,7 +456,7 @@ export const resetPassword = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "La contrasena se actualizo correctamente.",
+    message: "La contraseña se actualizó correctamente.",
     data: {
       token,
       user: {

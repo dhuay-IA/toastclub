@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS vr_sessions (
   status ENUM('active', 'completed') NOT NULL DEFAULT 'active',
   metadata_json JSON DEFAULT NULL,
   result_json JSON DEFAULT NULL,
+  video_url VARCHAR(2048) DEFAULT NULL,
+  video_uploaded_at DATETIME DEFAULT NULL,
   started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   ended_at TIMESTAMP NULL DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

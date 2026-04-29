@@ -12,9 +12,9 @@ interface SessionReadyStepProps {
 }
 
 const difficultyLabels = {
-  easy: "Facil",
+  easy: "Fácil",
   medium: "Medio",
-  hard: "Dificil",
+  hard: "Difícil",
 };
 
 const difficultyColors = {
@@ -35,23 +35,33 @@ const SessionReadyStep = ({
   difficulty,
   onBackToDashboard,
 }: SessionReadyStepProps) => {
-  const vrUrl = `https://vr.toastclub.app/session/${sessionCode}`;
-
   return (
     <div className="step-container py-12">
-      <div className="glass-card max-w-md p-8 mx-auto">
-        <div className="text-center mb-6">
+      <div className="glass-card mx-auto max-w-md p-8">
+        <div className="mb-6 text-center">
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/10">
             <span className="text-2xl">VR</span>
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Sesion lista</h2>
+          <h2 className="text-lg font-semibold text-foreground">Sesión creada</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            La práctica ya quedó registrada. El acceso a VR se gestiona internamente.
+          </p>
+        </div>
+
+        <div className="mb-6 rounded-2xl border border-secondary/20 bg-secondary/5 p-4 text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+            Código de sesión
+          </p>
+          <p className="mt-2 text-xl font-semibold tracking-[0.2em] text-foreground">
+            {sessionCode}
+          </p>
         </div>
 
         <div className="mb-8 space-y-3">
           <div className="flex justify-between border-b border-border/50 py-2 text-sm">
             <span className="text-muted-foreground">Modo</span>
             <span className="text-sm text-foreground">
-              {mode === "improvisation" ? "Improvisacion" : "Presentacion"}
+              {mode === "improvisation" ? "Improvisación" : "Presentación"}
             </span>
           </div>
           <div className="flex justify-between border-b border-border/50 py-2 text-sm">
@@ -72,7 +82,7 @@ const SessionReadyStep = ({
                 <span className="text-sm text-foreground">{slideCount}</span>
               </div>
               <div className="flex justify-between border-b border-border/50 py-2 text-sm">
-                <span className="text-muted-foreground">Duracion</span>
+                <span className="text-muted-foreground">Duración</span>
                 <span className="text-sm text-foreground">{totalMinutes} min</span>
               </div>
             </>
@@ -87,33 +97,24 @@ const SessionReadyStep = ({
                 </span>
               </div>
               <div className="flex justify-between border-b border-border/50 py-2 text-sm">
-                <span className="text-muted-foreground">Duracion</span>
+                <span className="text-muted-foreground">Duración</span>
                 <span className="text-sm text-foreground">{duration} min</span>
               </div>
             </>
           )}
         </div>
 
-        <a
-          href={vrUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-primary block w-full text-center"
-        >
-          INICIAR SESION VR
-        </a>
-
         <button
           onClick={onBackToDashboard}
-          className="mt-3 w-full rounded-lg border border-border bg-white/70 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-secondary hover:text-secondary"
+          className="w-full rounded-lg border border-border bg-white/70 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-secondary hover:text-secondary"
         >
           VOLVER AL DASHBOARD
         </button>
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
           {mode === "presentation"
-            ? "Tu presentacion ya esta lista. El acceso se gestiona internamente y la sesion finalizara automaticamente al cumplirse el tiempo."
-            : "El texto fue cargado. El acceso se gestiona internamente para iniciar la practica en VR."}
+            ? "Tu presentación quedó lista y la información de la sesión puede enviarse por los canales internos definidos por el equipo."
+            : "El tema fue registrado y la información de la sesión puede enviarse por los canales internos definidos por el equipo."}
         </p>
 
         {mode === "presentation" && slideImages && slideImages.length > 0 ? (

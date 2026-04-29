@@ -73,7 +73,7 @@ const OTPStep = ({
       if (res.success) {
         onComplete();
       } else {
-        setError(res.message || "Codigo incorrecto. Intentalo de nuevo.");
+        setError(res.message || "Código incorrecto. Inténtalo de nuevo.");
         setDigits(["", "", "", "", "", ""]);
         inputs.current[0]?.focus();
       }
@@ -81,7 +81,7 @@ const OTPStep = ({
       setError(
         error instanceof Error
           ? error.message
-          : "Error de conexion. Intentalo de nuevo."
+          : "Error de conexión. Inténtalo de nuevo."
       );
     } finally {
       setLoading(false);
@@ -99,16 +99,16 @@ const OTPStep = ({
       const res = await sendOTP(email);
 
       if (!res.success) {
-        setError(res.message || "No se pudo reenviar el codigo.");
+        setError(res.message || "No se pudo reenviar el código.");
         return;
       }
 
       setDigits(["", "", "", "", "", ""]);
       setInfo(
-        `Te enviamos un nuevo codigo. Te quedan ${Math.max(
+        `Te enviamos un nuevo código. Te quedan ${Math.max(
           maxResends - (resendCount + 1),
           0
-        )} reenvios.`
+        )} reenvíos.`
       );
       onResendSuccess();
       inputs.current[0]?.focus();
@@ -116,7 +116,7 @@ const OTPStep = ({
       setError(
         resendError instanceof Error
           ? resendError.message
-          : "Error de conexion. Intentalo de nuevo."
+          : "Error de conexión. Inténtalo de nuevo."
       );
     } finally {
       setResending(false);
@@ -127,10 +127,10 @@ const OTPStep = ({
     <div className="step-container py-16">
       <div className="glass-card mx-auto max-w-md p-8">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wider text-foreground">
-          Verificacion
+          Verificación
         </h2>
         <p className="mb-8 text-sm text-muted-foreground">
-          Enviamos un codigo de 6 digitos a{" "}
+          Enviamos un código de 6 dígitos a{" "}
           <span className="font-medium text-foreground">{email}</span>.
           Revisa tu bandeja de entrada.
         </p>
@@ -168,13 +168,13 @@ const OTPStep = ({
 
         <div className="mt-4 rounded-xl border border-dashed border-border/70 bg-white/60 p-4 text-center">
           <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-            Reenvio de codigo
+            Reenvío de código
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Puedes solicitar un nuevo codigo hasta {maxResends} veces.
+            Puedes solicitar un nuevo código hasta {maxResends} veces.
             {resendsRemaining > 0
-              ? ` Te quedan ${resendsRemaining} reenvios.`
-              : " Alcanzaste el limite. Usa otro correo para registrarte."}
+              ? ` Te quedan ${resendsRemaining} reenvíos.`
+              : " Alcanzaste el límite. Usa otro correo para registrarte."}
           </p>
           <button
             type="button"
@@ -182,7 +182,7 @@ const OTPStep = ({
             disabled={resendsRemaining === 0 || resending}
             className="mt-4 w-full rounded-lg border border-secondary/30 bg-white px-4 py-3 text-sm font-semibold uppercase tracking-wider text-secondary transition-colors hover:border-secondary hover:bg-secondary/5 disabled:cursor-not-allowed disabled:border-border disabled:text-muted-foreground"
           >
-            {resending ? "REENVIANDO..." : "SOLICITAR NUEVO CODIGO"}
+            {resending ? "REENVIANDO..." : "SOLICITAR NUEVO CÓDIGO"}
           </button>
         </div>
 

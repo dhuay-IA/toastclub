@@ -34,8 +34,9 @@ export async function createPracticeSession(params: {
     return {
       success: true,
       sessionCode,
+      sessionId: sessionCode,
       createdAt: new Date().toISOString(),
-      videoUrl: `https://videos.toastclub.app/session/${sessionCode}`,
+      videoUrl: null,
       source: "local" as const,
     };
   }
@@ -66,8 +67,10 @@ export async function createPracticeSession(params: {
 
   const session = res.data as
     | {
+        id?: number;
         sessionCode?: string;
         createdAt?: string;
+        videoUrl?: string | null;
       }
     | undefined;
 
@@ -82,9 +85,10 @@ export async function createPracticeSession(params: {
 
   return {
     success: true,
+    sessionId: session?.id ? String(session.id) : sessionCode,
     sessionCode,
     createdAt: session?.createdAt || new Date().toISOString(),
-    videoUrl: `https://videos.toastclub.app/session/${sessionCode}`,
+    videoUrl: session?.videoUrl ?? null,
     source: "api" as const,
   };
 }

@@ -32,7 +32,7 @@ export const createVrSession = async ({ userId, vrApp, scenarioKey, metadata }) 
 export const findVrSessionById = async (sessionId) => {
   const [rows] = await pool.execute(
     `SELECT id, user_id, session_code, vr_app, scenario_key, status, metadata_json, result_json,
-            started_at, ended_at, created_at, updated_at
+            video_url, video_uploaded_at, started_at, ended_at, created_at, updated_at
      FROM vr_sessions
      WHERE id = ?
      LIMIT 1`,
@@ -45,7 +45,7 @@ export const findVrSessionById = async (sessionId) => {
 export const findVrSessionByIdForUser = async ({ sessionId, userId }) => {
   const [rows] = await pool.execute(
     `SELECT id, user_id, session_code, vr_app, scenario_key, status, metadata_json, result_json,
-            started_at, ended_at, created_at, updated_at
+            video_url, video_uploaded_at, started_at, ended_at, created_at, updated_at
      FROM vr_sessions
      WHERE id = ? AND user_id = ?
      LIMIT 1`,
@@ -58,9 +58,22 @@ export const findVrSessionByIdForUser = async ({ sessionId, userId }) => {
 export const findActiveVrSessionByCode = async (sessionCode) => {
   const [rows] = await pool.execute(
     `SELECT id, user_id, session_code, vr_app, scenario_key, status, metadata_json, result_json,
-            started_at, ended_at, created_at, updated_at
+            video_url, video_uploaded_at, started_at, ended_at, created_at, updated_at
      FROM vr_sessions
      WHERE session_code = ? AND status = 'active'
+     LIMIT 1`,
+    [sessionCode]
+  );
+
+  return rows[0] ?? null;
+};
+
+export const findVrSessionByCode = async (sessionCode) => {
+  const [rows] = await pool.execute(
+    `SELECT id, user_id, session_code, vr_app, scenario_key, status, metadata_json, result_json,
+            video_url, video_uploaded_at, started_at, ended_at, created_at, updated_at
+     FROM vr_sessions
+     WHERE session_code = ?
      LIMIT 1`,
     [sessionCode]
   );
@@ -73,7 +86,7 @@ export const listVrSessionsByUser = async ({ userId, limit = 10 }) => {
 
   const [rows] = await pool.execute(
     `SELECT id, user_id, session_code, vr_app, scenario_key, status, metadata_json, result_json,
-            started_at, ended_at, created_at, updated_at
+            video_url, video_uploaded_at, started_at, ended_at, created_at, updated_at
      FROM vr_sessions
      WHERE user_id = ?
      ORDER BY created_at DESC
@@ -82,6 +95,19 @@ export const listVrSessionsByUser = async ({ userId, limit = 10 }) => {
   );
 
   return rows;
+};
+
+export const attachVideoToVrSession = async ({ sessionId, videoUrl }) => {
+  await pool.execute(
+    `UPDATE vr_sessions
+     SET video_url = ?,
+         video_uploaded_at = CURRENT_TIMESTAMP,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [videoUrl, sessionId]
+  );
+
+  return findVrSessionById(sessionId);
 };
 
 export const completeVrSession = async ({ sessionId, userId, result }) => {

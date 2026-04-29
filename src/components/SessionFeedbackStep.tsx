@@ -7,7 +7,7 @@ type SessionDetails = {
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
   createdAt: string;
-  videoUrl: string;
+  videoUrl?: string | null;
   feedback?: SessionFeedback;
   fileName?: string;
   totalMinutes?: number;
@@ -102,15 +102,21 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
                   Video
                 </p>
-                <a
-                  href={session.videoUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-secondary hover:underline"
-                >
-                  <PlayCircle className="h-4 w-4" />
-                  Ver grabacion de la sesion
-                </a>
+                {session.videoUrl ? (
+                  <a
+                    href={session.videoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-secondary hover:underline"
+                  >
+                    <PlayCircle className="h-4 w-4" />
+                    Ver grabación de la sesión
+                  </a>
+                ) : (
+                  <p className="mt-3 text-sm text-muted-foreground">
+                    El video aún no ha sido cargado para esta sesión.
+                  </p>
+                )}
               </div>
 
               <div className="rounded-2xl border border-border/70 bg-white/75 p-5">

@@ -1,10 +1,14 @@
 import {
+  attachVideoToVrSession,
   completeVrSession,
   createVrSession,
   findActiveVrSessionByCode,
+  findVrSessionByCode,
   findVrSessionByIdForUser,
   listVrSessionsByUser,
 } from "../models/vrSessionModel.js";
+import { promises as fs } from "fs";
+import path from "path";
 
 const parseJsonColumn = (value) => {
   if (!value) return null;
@@ -25,11 +29,50 @@ const serializeSession = (session) => ({
   status: session.status,
   metadata: parseJsonColumn(session.metadata_json),
   result: parseJsonColumn(session.result_json),
+  videoUrl: session.video_url,
+  videoUploadedAt: session.video_uploaded_at,
   startedAt: session.started_at,
   endedAt: session.ended_at,
   createdAt: session.created_at,
   updatedAt: session.updated_at,
 });
+
+const getPublicApiBaseUrl = (req) => {
+  const configuredBaseUrl =
+    process.env.PUBLIC_API_BASE_URL ||
+    process.env.VR_API_BASE_URL ||
+    process.env.API_BASE_URL;
+
+  if (configuredBaseUrl?.trim()) {
+    return configuredBaseUrl.replace(/\/+$/, "");
+  }
+
+  return `${req.protocol}://${req.get("host")}`;
+};
+
+const ensureVideoUploadDir = async () => {
+  const uploadDir = path.resolve("server/uploads/vr");
+  await fs.mkdir(uploadDir, { recursive: true });
+  return uploadDir;
+};
+
+const getSafeVideoExtension = (file) => {
+  const originalExtension = path.extname(file?.originalname || "").toLowerCase();
+  const allowedExtensions = new Set([".mp4", ".webm", ".mov", ".m4v"]);
+
+  if (allowedExtensions.has(originalExtension)) {
+    return originalExtension;
+  }
+
+  switch (file?.mimetype) {
+    case "video/webm":
+      return ".webm";
+    case "video/quicktime":
+      return ".mov";
+    default:
+      return ".mp4";
+  }
+};
 
 export const getVrAccess = async (req, res) => {
   return res.status(200).json({
@@ -43,6 +86,7 @@ export const getVrAccess = async (req, res) => {
         listSessionsEndpoint: "/api/vr/sessions",
         completeSessionEndpoint: "/api/vr/session/:sessionId/complete",
         vrPackageByCodeEndpoint: "/api/vr/session-code/:sessionCode/package",
+        uploadVideoByCodeEndpoint: "/api/vr/session-code/:sessionCode/video",
       },
     },
   });
@@ -197,5 +241,55 @@ export const finishVrSession = async (req, res) => {
     success: true,
     message: "VR session completed successfully.",
     data: serializeSession(session),
+  });
+};
+
+export const uploadVrSessionVideoByCode = async (req, res) => {
+  if (!validateVrAppAccess(req, res)) {
+    return;
+  }
+
+  const sessionCode = String(req.params.sessionCode || "").trim().toUpperCase();
+
+  if (!sessionCode) {
+    return res.status(400).json({
+      success: false,
+      message: "sessionCode is required.",
+    });
+  }
+
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "A video file is required.",
+    });
+  }
+
+  const session = await findVrSessionByCode(sessionCode);
+
+  if (!session) {
+    return res.status(404).json({
+      success: false,
+      message: "VR session not found for this code.",
+    });
+  }
+
+  const uploadDir = await ensureVideoUploadDir();
+  const extension = getSafeVideoExtension(req.file);
+  const fileName = `${session.session_code}-${Date.now()}${extension}`;
+  const filePath = path.join(uploadDir, fileName);
+
+  await fs.writeFile(filePath, req.file.buffer);
+
+  const videoUrl = `${getPublicApiBaseUrl(req)}/uploads/vr/${fileName}`;
+  const updatedSession = await attachVideoToVrSession({
+    sessionId: session.id,
+    videoUrl,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "VR session video uploaded successfully.",
+    data: serializeSession(updatedSession),
   });
 };

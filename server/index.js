@@ -73,6 +73,18 @@ const initializeDatabase = async () => {
 
   await addColumnIfMissing(
     "vr_sessions",
+    "video_url",
+    "video_url VARCHAR(2048) DEFAULT NULL AFTER result_json"
+  );
+
+  await addColumnIfMissing(
+    "vr_sessions",
+    "video_uploaded_at",
+    "video_uploaded_at DATETIME DEFAULT NULL AFTER video_url"
+  );
+
+  await addColumnIfMissing(
+    "vr_sessions",
     "session_code",
     "session_code VARCHAR(32) DEFAULT NULL AFTER user_id"
   );

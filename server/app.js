@@ -1,13 +1,13 @@
 import { config } from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import express from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 config({ path: path.resolve(__dirname, ".env.local") });
 
-import express from "express";
 import cors from "cors";
 import "./config/db.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -26,6 +26,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use("/uploads", express.static(path.resolve(__dirname, "uploads")));
 
 app.get("/api/health", (_req, res) => {
   res.status(200).json({

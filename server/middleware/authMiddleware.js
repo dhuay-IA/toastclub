@@ -7,7 +7,7 @@ export const authenticateToken = async (req, res, next) => {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({
       success: false,
-      message: "Se requiere un token de autorizacion.",
+      message: "Authorization token is required.",
     });
   }
 
@@ -20,7 +20,7 @@ export const authenticateToken = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: "No se encontro un usuario asociado a este token.",
+        message: "User not found for this token.",
       });
     }
 
@@ -37,7 +37,7 @@ export const authenticateToken = async (req, res, next) => {
   } catch {
     return res.status(401).json({
       success: false,
-      message: "El token es invalido o ha expirado.",
+      message: "Invalid or expired token.",
     });
   }
 };
@@ -46,7 +46,7 @@ export const requireAdmin = async (req, res, next) => {
   if (req.user?.role !== "admin") {
     return res.status(403).json({
       success: false,
-      message: "Se requiere acceso de administrador.",
+      message: "Admin access is required.",
     });
   }
 
