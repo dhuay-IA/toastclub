@@ -48,16 +48,13 @@ const SessionReadyStep = ({
           </p>
         </div>
 
-        <div className="mb-6 flex items-center justify-between gap-4 border-b border-border/50 py-2 text-sm">
-          <p className="text-muted-foreground">
-            Código de sesión
-          </p>
-          <p className="whitespace-nowrap text-sm font-semibold tracking-[0.18em] text-foreground">
-            {sessionCode}
-          </p>
-        </div>
-
         <div className="mb-8 space-y-3">
+          <div className="flex justify-between border-b border-border/50 py-2 text-sm">
+            <span className="text-muted-foreground">Código de sesión</span>
+            <span className="whitespace-nowrap text-sm font-semibold tracking-[0.18em] text-foreground">
+              {sessionCode}
+            </span>
+          </div>
           <div className="flex justify-between border-b border-border/50 py-2 text-sm">
             <span className="text-muted-foreground">Modo</span>
             <span className="text-sm text-foreground">
