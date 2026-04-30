@@ -1,4 +1,4 @@
-import { ArrowRight, ChartColumnBig, Clock3, History, LayoutDashboard, MonitorPlay, PlayCircle, Presentation, Sparkles } from "lucide-react";
+import { ArrowRight, ChartColumnBig, Clock3, History, LayoutDashboard, MonitorPlay, PlayCircle, Presentation, Sparkles, UsersRound } from "lucide-react";
 
 export type SessionFeedback = {
   confidence: string;
@@ -29,9 +29,11 @@ interface DashboardStepProps {
   onLogout: () => void;
   onOpenFeedback: (sessionId: string) => void;
   onOpenAdminReport?: () => void;
+  onOpenAgentPanel?: () => void;
   sessionSummary?: SessionSummary | null;
   sessionHistory: SessionSummary[];
   isAdmin?: boolean;
+  isAgent?: boolean;
 }
 
 const difficultyLabels = {
@@ -76,9 +78,11 @@ const DashboardStep = ({
   onLogout,
   onOpenFeedback,
   onOpenAdminReport,
+  onOpenAgentPanel,
   sessionSummary,
   sessionHistory,
   isAdmin = false,
+  isAgent = false,
 }: DashboardStepProps) => {
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
@@ -190,6 +194,32 @@ const DashboardStep = ({
                   </p>
                   <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
                     Abrir reporte
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                  </span>
+                </div>
+              </button>
+            ) : null}
+
+            {isAgent && onOpenAgentPanel ? (
+              <button
+                onClick={onOpenAgentPanel}
+                className="glass-card group flex h-full flex-col text-left"
+              >
+                <div className="rounded-t-xl bg-gradient-to-br from-secondary/20 via-white to-primary/10 px-6 py-6">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/90 text-secondary shadow-sm transition-transform duration-200 group-hover:scale-105">
+                    <UsersRound className="h-6 w-6" />
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col px-6 py-6">
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Panel presencial
+                  </h3>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">
+                    Consulta codigos de sesion y registra practicas para varios usuarios.
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
+                    Gestionar
                     <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                   </span>
                 </div>

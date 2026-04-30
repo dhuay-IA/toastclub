@@ -59,6 +59,18 @@ export const listUsersForAdminReport = async () => {
   return rows;
 };
 
+export const listStudentsForAgent = async () => {
+  const [rows] = await pool.execute(
+    `SELECT id, email, name, created_at, updated_at
+     FROM users
+     WHERE role = 'student'
+       AND is_verified = 1
+     ORDER BY name ASC, email ASC`
+  );
+
+  return rows;
+};
+
 export const storeUserOtp = async ({ userId, otp, expiresAt }) => {
   await pool.execute(
     `UPDATE users

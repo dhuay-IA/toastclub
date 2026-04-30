@@ -44,8 +44,13 @@ const initializeDatabase = async () => {
   await addColumnIfMissing(
     "users",
     "role",
-    "role ENUM('student', 'admin') NOT NULL DEFAULT 'student' AFTER password_hash"
+    "role ENUM('student', 'agent', 'admin') NOT NULL DEFAULT 'student' AFTER password_hash"
   );
+
+  await pool.query(`
+    ALTER TABLE users
+    MODIFY COLUMN role ENUM('student', 'agent', 'admin') NOT NULL DEFAULT 'student'
+  `);
 
   await addColumnIfMissing(
     "users",
@@ -124,6 +129,22 @@ const initializeDatabase = async () => {
        SET role = 'admin'
        WHERE LOWER(email) IN (${placeholders})`,
       configuredAdmins
+    );
+  }
+
+  const configuredAgents = (process.env.AGENT_EMAILS || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+
+  if (configuredAgents.length > 0) {
+    const placeholders = configuredAgents.map(() => "?").join(", ");
+    await pool.query(
+      `UPDATE users
+       SET role = 'agent'
+       WHERE role <> 'admin'
+         AND LOWER(email) IN (${placeholders})`,
+      configuredAgents
     );
   }
 };

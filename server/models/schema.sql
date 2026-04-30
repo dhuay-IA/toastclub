@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
-  role ENUM('student', 'admin') NOT NULL DEFAULT 'student',
+  role ENUM('student', 'agent', 'admin') NOT NULL DEFAULT 'student',
   is_verified TINYINT(1) NOT NULL DEFAULT 0,
   otp_code VARCHAR(6) DEFAULT NULL,
   otp_expires_at DATETIME DEFAULT NULL,

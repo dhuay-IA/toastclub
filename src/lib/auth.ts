@@ -11,7 +11,7 @@ export type AuthenticatedUser = {
   id?: number | string;
   email?: string;
   name?: string;
-  role?: "student" | "admin";
+  role?: "student" | "agent" | "admin";
   isVerified?: boolean;
 };
 
@@ -247,7 +247,7 @@ export function resetPassword(email: string, code: string, password: string) {
 }
 
 export function getProfile(token: string) {
-  return getFromApi<{ id: number; email: string; name: string; role: "student" | "admin" }>(
+  return getFromApi<{ id: number; email: string; name: string; role: "student" | "agent" | "admin" }>(
     "/api/profile",
     token
   );
@@ -259,7 +259,7 @@ export function getAdminReport(token: string) {
       id: number;
       email: string;
       name: string;
-      role: "student" | "admin";
+      role: "student" | "agent" | "admin";
       firstSeenAt: string;
       lastSeenAt: string;
       totalSessions: number;
@@ -273,6 +273,71 @@ export function getAdminReport(token: string) {
       createdAt: string;
     }>;
   }>("/api/admin/report", token);
+}
+
+export type AgentUser = {
+  id: number;
+  email: string;
+  name: string;
+  firstSeenAt: string;
+  lastSeenAt: string;
+};
+
+export type AgentSession = {
+  id: string;
+  userId: number;
+  email: string;
+  name: string;
+  sessionCode: string;
+  mode: "improvisation" | "presentation";
+  scenarioKey: string;
+  status: "active" | "completed";
+  metadata: {
+    difficulty?: "easy" | "medium" | "hard";
+    duration?: number;
+    totalMinutes?: number;
+    textTitle?: string;
+    fileName?: string;
+    groupId?: string;
+    createdByAgentId?: number;
+    createdByAgentEmail?: string;
+  } | null;
+  videoUrl?: string | null;
+  videoUploadedAt?: string | null;
+  startedAt: string;
+  endedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function getAgentUsers(token: string) {
+  return getFromApi<AgentUser[]>("/api/agent/users", token);
+}
+
+export function getAgentSessions(token: string) {
+  return getFromApi<AgentSession[]>("/api/agent/sessions", token);
+}
+
+export function getAgentSessionByCode(token: string, sessionCode: string) {
+  return getFromApi<AgentSession>(
+    `/api/agent/session-code/${encodeURIComponent(sessionCode)}`,
+    token
+  );
+}
+
+export function createAgentGroupSession(
+  token: string,
+  payload: {
+    userIds: number[];
+    vrApp: "presentation" | "improvisation";
+    difficulty: "easy" | "medium" | "hard";
+    duration?: number;
+    totalMinutes?: number;
+    textTitle?: string;
+    fileName?: string;
+  }
+) {
+  return postToAuthenticatedApi<AgentSession[]>("/api/agent/group-session", token, payload);
 }
 
 export function getVrSessions(token: string) {

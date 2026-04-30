@@ -4,6 +4,7 @@ import LoginStep from "@/components/LoginStep";
 import OTPStep from "@/components/OTPStep";
 import TermsStep from "@/components/TermsStep";
 import AdminReportStep from "@/components/AdminReportStep";
+import AgentPanelStep from "@/components/AgentPanelStep";
 import DashboardStep, {
   type SessionFeedback,
   type SessionSummary,
@@ -14,7 +15,16 @@ import PresentationConfigStep from "@/components/PresentationConfigStep";
 import DifficultyStep from "@/components/DifficultyStep";
 import SessionReadyStep from "@/components/SessionReadyStep";
 import StepTimeline from "@/components/StepTimeline";
-import { getAdminReport, getProfile, getVrSessions } from "@/lib/auth";
+import {
+  createAgentGroupSession,
+  getAdminReport,
+  getAgentSessions,
+  getAgentUsers,
+  getProfile,
+  getVrSessions,
+  type AgentSession,
+  type AgentUser,
+} from "@/lib/auth";
 import { createPracticeSession } from "@/lib/vr";
 
 type FlowStep =
@@ -24,6 +34,7 @@ type FlowStep =
   | "terms"
   | "dashboard"
   | "admin-report"
+  | "agent-panel"
   | "feedback"
   | "config-improv"
   | "config-presentation"
@@ -93,11 +104,15 @@ const Index = () => {
   const [duration, setDuration] = useState(3);
   const [otpResendCount, setOtpResendCount] = useState(0);
   const [authToken, setAuthToken] = useState("");
-  const [userRole, setUserRole] = useState<"student" | "admin">("student");
+  const [userRole, setUserRole] = useState<"student" | "agent" | "admin">("student");
   const [adminReportUsers, setAdminReportUsers] = useState<UserAccessRecord[]>([]);
   const [adminReportSessions, setAdminReportSessions] = useState<SessionRecord[]>([]);
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportError, setAdminReportError] = useState("");
+  const [agentUsers, setAgentUsers] = useState<AgentUser[]>([]);
+  const [agentSessions, setAgentSessions] = useState<AgentSession[]>([]);
+  const [agentPanelLoading, setAgentPanelLoading] = useState(false);
+  const [agentPanelError, setAgentPanelError] = useState("");
 
   const mapApiSessionToRecord = useCallback(
     (session: {
@@ -233,10 +248,12 @@ const Index = () => {
       }
 
       const profile = res.data as
-        | { email?: string; name?: string; role?: "student" | "admin" }
+        | { email?: string; name?: string; role?: "student" | "agent" | "admin" }
         | undefined;
 
-      setUserRole(profile?.role === "admin" ? "admin" : "student");
+      setUserRole(
+        profile?.role === "admin" ? "admin" : profile?.role === "agent" ? "agent" : "student"
+      );
       if (profile?.email) setEmail(profile.email);
       if (profile?.name) {
         setUserName(profile.name);
@@ -290,6 +307,42 @@ const Index = () => {
     };
   }, [authToken, currentStep, userRole]);
 
+  const loadAgentPanelData = useCallback(async () => {
+    if (!authToken || !["agent", "admin"].includes(userRole)) {
+      return;
+    }
+
+    setAgentPanelLoading(true);
+    setAgentPanelError("");
+
+    const [usersRes, sessionsRes] = await Promise.all([
+      getAgentUsers(authToken),
+      getAgentSessions(authToken),
+    ]);
+
+    if (!usersRes.success || !sessionsRes.success) {
+      setAgentUsers([]);
+      setAgentSessions([]);
+      setAgentPanelError(
+        usersRes.message || sessionsRes.message || "No se pudo cargar el panel presencial."
+      );
+      setAgentPanelLoading(false);
+      return;
+    }
+
+    setAgentUsers((usersRes.data as AgentUser[]) ?? []);
+    setAgentSessions((sessionsRes.data as AgentSession[]) ?? []);
+    setAgentPanelLoading(false);
+  }, [authToken, userRole]);
+
+  useEffect(() => {
+    if (currentStep !== "agent-panel") {
+      return;
+    }
+
+    void loadAgentPanelData();
+  }, [currentStep, loadAgentPanelData]);
+
   const selectedSession = useMemo(
     () => sessionHistory.find((session) => session.id === selectedSessionId) ?? null,
     [selectedSessionId, sessionHistory]
@@ -330,7 +383,7 @@ const Index = () => {
     userEmail: string,
     explicitName?: string,
     token?: string,
-    role: "student" | "admin" = "student"
+    role: "student" | "agent" | "admin" = "student"
   ) => {
     setOtpResendCount(0);
     setEmail(userEmail);
@@ -347,6 +400,28 @@ const Index = () => {
     }
     registerUserAccess(userEmail, explicitName);
     setCurrentStep("dashboard");
+  };
+
+  const handleCreateAgentGroupSession = async (payload: {
+    userIds: number[];
+    vrApp: "presentation" | "improvisation";
+    difficulty: "easy" | "medium" | "hard";
+    duration?: number;
+    totalMinutes?: number;
+    textTitle?: string;
+    fileName?: string;
+  }) => {
+    if (!authToken) return;
+
+    const res = await createAgentGroupSession(authToken, payload);
+
+    if (!res.success) {
+      setAgentPanelError(res.message || "No se pudieron crear las sesiones.");
+      return;
+    }
+
+    setAgentPanelError("");
+    await loadAgentPanelData();
   };
 
   const handleRegisterSuccess = (userEmail: string, explicitName: string) => {
@@ -506,6 +581,9 @@ const Index = () => {
     setAdminReportUsers([]);
     setAdminReportSessions([]);
     setAdminReportError("");
+    setAgentUsers([]);
+    setAgentSessions([]);
+    setAgentPanelError("");
     setOtpResendCount(0);
     setSelectedSessionId(null);
     setCurrentStep("login");
@@ -513,6 +591,7 @@ const Index = () => {
 
   const adminUsers = adminReportUsers;
   const isCurrentUserAdmin = userRole === "admin";
+  const isCurrentUserAgent = userRole === "agent";
   const adminSessions = adminReportSessions;
 
   if (currentStep === "landing") {
@@ -523,7 +602,8 @@ const Index = () => {
     currentStep !== "login" &&
     currentStep !== "dashboard" &&
     currentStep !== "feedback" &&
-    currentStep !== "admin-report";
+    currentStep !== "admin-report" &&
+    currentStep !== "agent-panel";
   const isFirstSessionFlow =
     sessionHistory.length === 0 &&
     (currentStep === "otp" ||
@@ -578,9 +658,15 @@ const Index = () => {
             onLogout={handleLogout}
             onOpenFeedback={handleOpenFeedback}
             onOpenAdminReport={isCurrentUserAdmin ? () => setCurrentStep("admin-report") : undefined}
+            onOpenAgentPanel={
+              isCurrentUserAgent || isCurrentUserAdmin
+                ? () => setCurrentStep("agent-panel")
+                : undefined
+            }
             sessionSummary={sessionHistory[0] ?? null}
             sessionHistory={sessionHistory}
             isAdmin={isCurrentUserAdmin}
+            isAgent={isCurrentUserAgent || isCurrentUserAdmin}
           />
         )}
         {currentStep === "admin-report" && isCurrentUserAdmin && (
@@ -593,6 +679,19 @@ const Index = () => {
             dataSourceLabel="base real"
             onBack={() => setCurrentStep("dashboard")}
             onLogout={handleLogout}
+          />
+        )}
+        {currentStep === "agent-panel" && (isCurrentUserAgent || isCurrentUserAdmin) && (
+          <AgentPanelStep
+            agentName={userName || formatDisplayName(email)}
+            users={agentUsers}
+            sessions={agentSessions}
+            isLoading={agentPanelLoading}
+            error={agentPanelError}
+            onBack={() => setCurrentStep("dashboard")}
+            onLogout={handleLogout}
+            onRefresh={loadAgentPanelData}
+            onCreateGroupSession={handleCreateAgentGroupSession}
           />
         )}
         {currentStep === "feedback" && selectedSession && (
