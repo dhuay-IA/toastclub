@@ -1,13 +1,10 @@
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
 
-GlobalWorkerOptions.workerPort = new Worker(
-  new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
-  { type: "module" }
-);
-
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 const RAILWAY_API_URL = "https://toastclub-production.up.railway.app";
 const LOCAL_HOST_NAMES = ["local" + "host", "127.0" + ".0.1"];
+
+let pdfWorkerReady = false;
 
 const isConfiguredUrl = (value?: string) =>
   Boolean(value && !value.includes("YOUR_API_URL"));
@@ -41,7 +38,21 @@ const getApiBaseUrl = () => {
   return resolvedApiUrl!.replace(/\/+$/, "");
 };
 
+const ensurePdfWorker = () => {
+  if (pdfWorkerReady || GlobalWorkerOptions.workerPort) {
+    return;
+  }
+
+  GlobalWorkerOptions.workerPort = new Worker(
+    new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url),
+    { type: "module" }
+  );
+  pdfWorkerReady = true;
+};
+
 const renderPdfBufferToImages = async (buffer: ArrayBuffer) => {
+  ensurePdfWorker();
+
   const pdf = await getDocument({ data: buffer }).promise;
   const images: string[] = [];
 
