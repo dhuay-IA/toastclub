@@ -52,8 +52,8 @@ const SessionReadyStep = ({
           <p className="text-muted-foreground">
             Código de sesión
           </p>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-foreground">
-            {sessionCode || "No disponible"}
+          <p className="whitespace-nowrap text-sm font-semibold tracking-[0.18em] text-foreground">
+            {sessionCode}
           </p>
         </div>
 

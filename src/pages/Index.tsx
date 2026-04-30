@@ -117,6 +117,7 @@ const Index = () => {
       createdAt: string;
     }): SessionRecord => ({
       id: String(session.id),
+      sessionCode: session.sessionCode,
       email,
       mode: session.vrApp === "presentation" ? "presentation" : "improvisation",
       difficulty: session.metadata?.difficulty ?? "medium",
@@ -422,6 +423,7 @@ const Index = () => {
 
     const newSession: SessionRecord = {
       id: creation.sessionId || newSessionId,
+      sessionCode: newSessionId,
       email,
       mode,
       difficulty: selectedDifficulty,

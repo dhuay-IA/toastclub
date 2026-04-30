@@ -9,6 +9,7 @@ export type SessionFeedback = {
 
 export type SessionSummary = {
   id: string;
+  sessionCode?: string;
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
   createdAt: string;

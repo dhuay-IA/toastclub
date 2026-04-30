@@ -4,7 +4,9 @@ export type SessionMode = "improvisation" | "presentation";
 export type SessionDifficulty = "easy" | "medium" | "hard";
 
 const createLocalSessionCode = () =>
-  `LOCAL-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(6, "0");
 
 export async function createPracticeSession(params: {
   token?: string;
