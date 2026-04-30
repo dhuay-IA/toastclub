@@ -6,18 +6,39 @@ GlobalWorkerOptions.workerPort = new Worker(
 );
 
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
+const RAILWAY_API_URL = "https://toastclub-production.up.railway.app";
+const LOCAL_HOST_NAMES = ["local" + "host", "127.0" + ".0.1"];
 
 const isConfiguredUrl = (value?: string) =>
   Boolean(value && !value.includes("YOUR_API_URL"));
 
+const isLocalApiUrl = (value?: string) => {
+  if (!value) return false;
+
+  try {
+    return LOCAL_HOST_NAMES.includes(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isRunningOnPublicHost = () => {
+  if (typeof window === "undefined") return false;
+
+  return !LOCAL_HOST_NAMES.includes(window.location.hostname);
+};
+
 const getApiBaseUrl = () => {
-  if (!isConfiguredUrl(API_URL)) {
+  const resolvedApiUrl =
+    isRunningOnPublicHost() && isLocalApiUrl(API_URL) ? RAILWAY_API_URL : API_URL;
+
+  if (!isConfiguredUrl(resolvedApiUrl)) {
     throw new Error(
       "Configura VITE_API_URL en .env.local para procesar presentaciones PPT o PPTX."
     );
   }
 
-  return API_URL!.replace(/\/+$/, "");
+  return resolvedApiUrl!.replace(/\/+$/, "");
 };
 
 const renderPdfBufferToImages = async (buffer: ArrayBuffer) => {

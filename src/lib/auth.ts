@@ -1,5 +1,7 @@
 const GAS_URL = import.meta.env.VITE_GAS_URL as string | undefined;
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
+const RAILWAY_API_URL = "https://toastclub-production.up.railway.app";
+const LOCAL_HOST_NAMES = ["local" + "host", "127.0" + ".0.1"];
 
 export type AuthResponse = {
   success: boolean;
@@ -24,11 +26,37 @@ type ApiEnvelope<T> = {
 const isConfiguredUrl = (value?: string) =>
   Boolean(value && !value.includes("YOUR_SCRIPT_ID") && !value.includes("YOUR_API_URL"));
 
+const isLocalApiUrl = (value?: string) => {
+  if (!value) return false;
+
+  try {
+    return LOCAL_HOST_NAMES.includes(new URL(value).hostname);
+  } catch {
+    return false;
+  }
+};
+
+const isRunningOnPublicHost = () => {
+  if (typeof window === "undefined") return false;
+
+  return !LOCAL_HOST_NAMES.includes(window.location.hostname);
+};
+
+const getResolvedApiUrl = () => {
+  if (isRunningOnPublicHost() && isLocalApiUrl(API_URL)) {
+    return RAILWAY_API_URL;
+  }
+
+  return API_URL;
+};
+
 const getAuthProvider = () => {
-  if (isConfiguredUrl(API_URL)) {
+  const resolvedApiUrl = getResolvedApiUrl();
+
+  if (isConfiguredUrl(resolvedApiUrl)) {
     return {
       type: "api" as const,
-      baseUrl: API_URL!.replace(/\/+$/, ""),
+      baseUrl: resolvedApiUrl!.replace(/\/+$/, ""),
     };
   }
 
