@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, PlayCircle } from "lucide-react";
+import { ArrowLeft, Headphones } from "lucide-react";
 import type { SessionFeedback } from "./DashboardStep";
 
 type SessionDetails = {
@@ -7,6 +7,7 @@ type SessionDetails = {
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
   createdAt: string;
+  audioUrl?: string | null;
   videoUrl?: string | null;
   feedback?: SessionFeedback;
   fileName?: string;
@@ -71,6 +72,8 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
     setFeedback(session.feedback ?? emptyFeedback);
   }, [session]);
 
+  const audioUrl = session.audioUrl ?? session.videoUrl ?? null;
+
   return (
     <div className="w-full max-w-5xl mx-auto px-6 py-10 lg:px-8">
       <div className="space-y-6">
@@ -91,7 +94,7 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
               Feedback de la sesion
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85">
-              Revisa el video, responde el formulario y guarda observaciones utiles para
+              Revisa el audio, responde el formulario y guarda observaciones utiles para
               tu siguiente practica.
             </p>
           </div>
@@ -100,21 +103,21 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
             <aside className="space-y-4">
               <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
                 <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                  Video
+                  Audio
                 </p>
-                {session.videoUrl ? (
+                {audioUrl ? (
                   <a
-                    href={session.videoUrl}
+                    href={audioUrl}
                     target="_blank"
                     rel="noreferrer"
                     className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-secondary hover:underline"
                   >
-                    <PlayCircle className="h-4 w-4" />
-                    Ver grabación de la sesión
+                    <Headphones className="h-4 w-4" />
+                    Ver audio de la sesion
                   </a>
                 ) : (
                   <p className="mt-3 text-sm text-muted-foreground">
-                    El video aún no ha sido cargado para esta sesión.
+                    El audio aun no ha sido cargado para esta sesion.
                   </p>
                 )}
               </div>

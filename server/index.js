@@ -112,6 +112,11 @@ const initializeDatabase = async () => {
     MODIFY COLUMN session_code VARCHAR(32) NOT NULL
   `);
 
+  await pool.query(`
+    ALTER TABLE vr_sessions
+    MODIFY COLUMN status ENUM('active', 'completed', 'canceled') NOT NULL DEFAULT 'active'
+  `);
+
   const configuredAdmins = (process.env.ADMIN_EMAILS || "")
     .split(",")
     .map((value) => value.trim().toLowerCase())

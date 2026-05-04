@@ -14,7 +14,7 @@ import PresentationConfigStep from "@/components/PresentationConfigStep";
 import DifficultyStep from "@/components/DifficultyStep";
 import SessionReadyStep from "@/components/SessionReadyStep";
 import StepTimeline from "@/components/StepTimeline";
-import { getAdminReport, getProfile, getVrSessions } from "@/lib/auth";
+import { cancelVrSession, getAdminReport, getProfile, getVrSessions } from "@/lib/auth";
 import { createPracticeSession } from "@/lib/vr";
 
 type FlowStep =
@@ -113,6 +113,8 @@ const Index = () => {
         slideImages?: string[];
         textTitle?: string;
       } | null;
+      status?: "active" | "completed" | "canceled";
+      audioUrl?: string | null;
       videoUrl?: string | null;
       createdAt: string;
     }): SessionRecord => ({
@@ -121,7 +123,9 @@ const Index = () => {
       email,
       mode: session.vrApp === "presentation" ? "presentation" : "improvisation",
       difficulty: session.metadata?.difficulty ?? "medium",
+      status: session.status ?? "active",
       createdAt: session.createdAt,
+      audioUrl: session.audioUrl ?? session.videoUrl ?? null,
       videoUrl: session.videoUrl ?? null,
       fileName: session.metadata?.fileName,
       totalMinutes: session.metadata?.totalMinutes,
@@ -200,6 +204,8 @@ const Index = () => {
           textTitle?: string;
         } | null;
         videoUrl?: string | null;
+        audioUrl?: string | null;
+        status?: "active" | "completed" | "canceled";
         createdAt: string;
       }>) ?? []).map(mapApiSessionToRecord);
 
@@ -427,8 +433,10 @@ const Index = () => {
       email,
       mode,
       difficulty: selectedDifficulty,
+      status: "active",
       createdAt: creation.createdAt,
       videoUrl: creation.videoUrl ?? null,
+      audioUrl: creation.audioUrl ?? creation.videoUrl ?? null,
       fileName,
       totalMinutes,
       slideCount,
@@ -474,6 +482,53 @@ const Index = () => {
   const handleOpenFeedback = (sessionIdToOpen: string) => {
     setSelectedSessionId(sessionIdToOpen);
     setCurrentStep("feedback");
+  };
+
+  const updateSessionRecord = (
+    sessionIdToUpdate: string,
+    updater: (session: SessionRecord) => SessionRecord
+  ) => {
+    const updateAndSort = (sessions: SessionRecord[]) =>
+      sessions
+        .map((session) => (session.id === sessionIdToUpdate ? updater(session) : session))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    setAllSessions((current) => updateAndSort(current));
+    setSessionHistory((current) => updateAndSort(current));
+
+    const stored = localStorage.getItem(SESSION_HISTORY_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as SessionRecord[];
+      localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(updateAndSort(parsed)));
+    }
+  };
+
+  const handleCancelSession = async (sessionIdToCancel: string) => {
+    const session = sessionHistory.find((item) => item.id === sessionIdToCancel);
+    if (!session || session.status === "canceled") {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "¿Deseas cancelar esta sesion? El codigo ya no deberia usarse si el estudiante no asistira."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    if (authToken) {
+      const res = await cancelVrSession(authToken, sessionIdToCancel);
+      if (!res.success) {
+        window.alert(res.message || "No se pudo cancelar la sesion.");
+        return;
+      }
+    }
+
+    updateSessionRecord(sessionIdToCancel, (current) => ({
+      ...current,
+      status: "canceled",
+    }));
   };
 
   const handleSaveSessionFeedback = (sessionIdToUpdate: string, feedback: SessionFeedback) => {
@@ -577,6 +632,7 @@ const Index = () => {
             onSelectMode={handleMode}
             onLogout={handleLogout}
             onOpenFeedback={handleOpenFeedback}
+            onCancelSession={handleCancelSession}
             onOpenAdminReport={isCurrentUserAdmin ? () => setCurrentStep("admin-report") : undefined}
             sessionSummary={sessionHistory[0] ?? null}
             sessionHistory={sessionHistory}

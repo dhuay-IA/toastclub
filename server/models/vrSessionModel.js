@@ -123,3 +123,16 @@ export const completeVrSession = async ({ sessionId, userId, result }) => {
 
   return findVrSessionByIdForUser({ sessionId, userId });
 };
+
+export const cancelVrSession = async ({ sessionId, userId }) => {
+  await pool.execute(
+    `UPDATE vr_sessions
+     SET status = 'canceled',
+         ended_at = COALESCE(ended_at, CURRENT_TIMESTAMP),
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND user_id = ?`,
+    [sessionId, userId]
+  );
+
+  return findVrSessionByIdForUser({ sessionId, userId });
+};

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  cancelMyVrSession,
   finishVrSession,
   getMyVrSession,
   getVrSessionPackageByCode,
@@ -24,7 +25,12 @@ router.get("/vr/access", asyncHandler(authenticateToken), asyncHandler(getVrAcce
 router.get("/vr/session-code/:sessionCode/package", asyncHandler(getVrSessionPackageByCode));
 router.post(
   "/vr/session-code/:sessionCode/video",
-  upload.single("video"),
+  upload.fields([{ name: "audio", maxCount: 1 }, { name: "video", maxCount: 1 }]),
+  asyncHandler(uploadVrSessionVideoByCode)
+);
+router.post(
+  "/vr/session-code/:sessionCode/audio",
+  upload.fields([{ name: "audio", maxCount: 1 }, { name: "video", maxCount: 1 }]),
   asyncHandler(uploadVrSessionVideoByCode)
 );
 router.get("/vr/sessions", asyncHandler(authenticateToken), asyncHandler(listMyVrSessions));
@@ -38,6 +44,11 @@ router.post(
   "/vr/session/:sessionId/complete",
   asyncHandler(authenticateToken),
   asyncHandler(finishVrSession)
+);
+router.post(
+  "/vr/session/:sessionId/cancel",
+  asyncHandler(authenticateToken),
+  asyncHandler(cancelMyVrSession)
 );
 
 export default router;

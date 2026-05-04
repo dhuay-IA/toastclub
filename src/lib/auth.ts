@@ -283,7 +283,7 @@ export function getVrSessions(token: string) {
       sessionCode: string;
       vrApp: "presentation" | "improvisation";
       scenarioKey: string;
-      status: "active" | "completed";
+      status: "active" | "completed" | "canceled";
       metadata: {
         difficulty?: "easy" | "medium" | "hard";
         duration?: number;
@@ -294,6 +294,7 @@ export function getVrSessions(token: string) {
         textTitle?: string;
       } | null;
       result: unknown;
+      audioUrl?: string | null;
       videoUrl?: string | null;
       videoUploadedAt?: string | null;
       createdAt: string;
@@ -325,7 +326,7 @@ export function createVrSession(
     sessionCode: string;
     vrApp: "presentation" | "improvisation";
     scenarioKey: string;
-    status: "active" | "completed";
+    status: "active" | "completed" | "canceled";
     metadata: {
       difficulty: "easy" | "medium" | "hard";
       duration?: number;
@@ -335,6 +336,19 @@ export function createVrSession(
       slideImages?: string[];
       textTitle?: string;
     } | null;
+    audioUrl?: string | null;
+    videoUrl?: string | null;
     createdAt: string;
   }>("/api/vr/session", token, payload);
+}
+
+export function cancelVrSession(token: string, sessionId: string) {
+  return postToAuthenticatedApi<{
+    id: number;
+    sessionCode: string;
+    vrApp: "presentation" | "improvisation";
+    scenarioKey: string;
+    status: "active" | "completed" | "canceled";
+    createdAt: string;
+  }>(`/api/vr/session/${sessionId}/cancel`, token, {});
 }

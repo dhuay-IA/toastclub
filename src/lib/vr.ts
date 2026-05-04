@@ -38,6 +38,7 @@ export async function createPracticeSession(params: {
       sessionCode,
       sessionId: sessionCode,
       createdAt: new Date().toISOString(),
+      audioUrl: null,
       videoUrl: null,
       source: "local" as const,
     };
@@ -72,6 +73,7 @@ export async function createPracticeSession(params: {
         id?: number;
         sessionCode?: string;
         createdAt?: string;
+        audioUrl?: string | null;
         videoUrl?: string | null;
       }
     | undefined;
@@ -90,6 +92,7 @@ export async function createPracticeSession(params: {
     sessionId: session?.id ? String(session.id) : sessionCode,
     sessionCode,
     createdAt: session?.createdAt || new Date().toISOString(),
+    audioUrl: session?.audioUrl ?? session?.videoUrl ?? null,
     videoUrl: session?.videoUrl ?? null,
     source: "api" as const,
   };

@@ -1,5 +1,6 @@
 import {
   attachVideoToVrSession,
+  cancelVrSession,
   completeVrSession,
   createVrSession,
   findActiveVrSessionByCode,
@@ -30,6 +31,7 @@ const serializeSession = (session) => ({
   metadata: parseJsonColumn(session.metadata_json),
   result: parseJsonColumn(session.result_json),
   videoUrl: session.video_url,
+  audioUrl: session.video_url,
   videoUploadedAt: session.video_uploaded_at,
   startedAt: session.started_at,
   endedAt: session.ended_at,
@@ -50,27 +52,53 @@ const getPublicApiBaseUrl = (req) => {
   return `${req.protocol}://${req.get("host")}`;
 };
 
-const ensureVideoUploadDir = async () => {
+const ensureMediaUploadDir = async () => {
   const uploadDir = path.resolve("server/uploads/vr");
   await fs.mkdir(uploadDir, { recursive: true });
   return uploadDir;
 };
 
-const getSafeVideoExtension = (file) => {
+const getUploadedMediaFile = (req) =>
+  req.file ?? req.files?.audio?.[0] ?? req.files?.video?.[0] ?? null;
+
+const getSafeMediaExtension = (file) => {
   const originalExtension = path.extname(file?.originalname || "").toLowerCase();
-  const allowedExtensions = new Set([".mp4", ".webm", ".mov", ".m4v"]);
+  const allowedExtensions = new Set([
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".aac",
+    ".ogg",
+    ".webm",
+    ".mp4",
+    ".mov",
+    ".m4v",
+  ]);
 
   if (allowedExtensions.has(originalExtension)) {
     return originalExtension;
   }
 
   switch (file?.mimetype) {
+    case "audio/mpeg":
+      return ".mp3";
+    case "audio/wav":
+    case "audio/x-wav":
+      return ".wav";
+    case "audio/mp4":
+    case "audio/x-m4a":
+      return ".m4a";
+    case "audio/aac":
+      return ".aac";
+    case "audio/ogg":
+      return ".ogg";
+    case "audio/webm":
     case "video/webm":
       return ".webm";
     case "video/quicktime":
       return ".mov";
     default:
-      return ".mp4";
+      return ".mp3";
   }
 };
 
@@ -86,6 +114,7 @@ export const getVrAccess = async (req, res) => {
         listSessionsEndpoint: "/api/vr/sessions",
         completeSessionEndpoint: "/api/vr/session/:sessionId/complete",
         vrPackageByCodeEndpoint: "/api/vr/session-code/:sessionCode/package",
+        uploadAudioByCodeEndpoint: "/api/vr/session-code/:sessionCode/audio",
         uploadVideoByCodeEndpoint: "/api/vr/session-code/:sessionCode/video",
       },
     },
@@ -244,6 +273,33 @@ export const finishVrSession = async (req, res) => {
   });
 };
 
+export const cancelMyVrSession = async (req, res) => {
+  const sessionId = Number(req.params.sessionId);
+
+  const existingSession = await findVrSessionByIdForUser({
+    sessionId,
+    userId: req.user.id,
+  });
+
+  if (!existingSession) {
+    return res.status(404).json({
+      success: false,
+      message: "VR session not found.",
+    });
+  }
+
+  const session = await cancelVrSession({
+    sessionId,
+    userId: req.user.id,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "VR session canceled successfully.",
+    data: serializeSession(session),
+  });
+};
+
 export const uploadVrSessionVideoByCode = async (req, res) => {
   if (!validateVrAppAccess(req, res)) {
     return;
@@ -258,10 +314,12 @@ export const uploadVrSessionVideoByCode = async (req, res) => {
     });
   }
 
-  if (!req.file) {
+  const mediaFile = getUploadedMediaFile(req);
+
+  if (!mediaFile) {
     return res.status(400).json({
       success: false,
-      message: "A video file is required.",
+      message: "An audio file is required.",
     });
   }
 
@@ -274,12 +332,12 @@ export const uploadVrSessionVideoByCode = async (req, res) => {
     });
   }
 
-  const uploadDir = await ensureVideoUploadDir();
-  const extension = getSafeVideoExtension(req.file);
+  const uploadDir = await ensureMediaUploadDir();
+  const extension = getSafeMediaExtension(mediaFile);
   const fileName = `${session.session_code}-${Date.now()}${extension}`;
   const filePath = path.join(uploadDir, fileName);
 
-  await fs.writeFile(filePath, req.file.buffer);
+  await fs.writeFile(filePath, mediaFile.buffer);
 
   const videoUrl = `${getPublicApiBaseUrl(req)}/uploads/vr/${fileName}`;
   const updatedSession = await attachVideoToVrSession({
@@ -289,7 +347,7 @@ export const uploadVrSessionVideoByCode = async (req, res) => {
 
   return res.status(200).json({
     success: true,
-    message: "VR session video uploaded successfully.",
+    message: "VR session audio uploaded successfully.",
     data: serializeSession(updatedSession),
   });
 };

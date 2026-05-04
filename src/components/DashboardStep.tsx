@@ -1,4 +1,4 @@
-import { ArrowRight, ChartColumnBig, Clock3, History, LayoutDashboard, MonitorPlay, PlayCircle, Presentation, Sparkles } from "lucide-react";
+import { ArrowRight, ChartColumnBig, Clock3, Headphones, History, LayoutDashboard, Mic2, Presentation, Sparkles, XCircle } from "lucide-react";
 
 export type SessionFeedback = {
   confidence: string;
@@ -12,7 +12,9 @@ export type SessionSummary = {
   sessionCode?: string;
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
+  status?: "active" | "completed" | "canceled";
   createdAt: string;
+  audioUrl?: string | null;
   videoUrl?: string | null;
   feedback?: SessionFeedback;
   fileName?: string;
@@ -28,6 +30,7 @@ interface DashboardStepProps {
   onSelectMode: (mode: "improvisation" | "presentation") => void;
   onLogout: () => void;
   onOpenFeedback: (sessionId: string) => void;
+  onCancelSession: (sessionId: string) => void;
   onOpenAdminReport?: () => void;
   sessionSummary?: SessionSummary | null;
   sessionHistory: SessionSummary[];
@@ -70,11 +73,14 @@ const feedbackComplete = (feedback?: SessionFeedback) =>
       feedback?.improvement?.trim()
   );
 
+const getAudioUrl = (session: SessionSummary) => session.audioUrl ?? session.videoUrl ?? null;
+
 const DashboardStep = ({
   userName,
   onSelectMode,
   onLogout,
   onOpenFeedback,
+  onCancelSession,
   onOpenAdminReport,
   sessionSummary,
   sessionHistory,
@@ -95,13 +101,13 @@ const DashboardStep = ({
                   Hola, {userName}
                 </h2>
                 <p className="max-w-xl text-sm leading-relaxed text-white/85">
-                  Desde aqui puedes iniciar una nueva practica, revisar grabaciones y
+                  Desde aqui puedes iniciar una nueva practica, revisar audios y
                   abrir el feedback de cada sesion desde su propio registro.
                 </p>
               </div>
 
               <div className="hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm md:block">
-                <MonitorPlay className="h-8 w-8 text-white/85" />
+                <Mic2 className="h-8 w-8 text-white/85" />
               </div>
             </div>
           </div>
@@ -129,7 +135,7 @@ const DashboardStep = ({
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-foreground">
-                    Historial con video y feedback
+                    Historial con audio y feedback
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Cada sesion tiene su propio registro y formulario.
@@ -232,25 +238,30 @@ const DashboardStep = ({
                 </div>
 
                 <div className="flex gap-3">
-                  {sessionSummary.videoUrl ? (
+                  {getAudioUrl(sessionSummary) ? (
                     <a
-                      href={sessionSummary.videoUrl}
+                      href={getAudioUrl(sessionSummary) ?? undefined}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex flex-1 items-center justify-center rounded-lg border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
                     >
-                      Ver video
+                      Ver audio
                     </a>
                   ) : (
                     <div className="inline-flex flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                      Video pendiente
+                      Audio pendiente
                     </div>
                   )}
                   <button
                     onClick={() => onOpenFeedback(sessionSummary.id)}
+                    disabled={sessionSummary.status === "canceled"}
                     className="flex-1 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
                   >
-                    {feedbackComplete(sessionSummary.feedback) ? "Editar feedback" : "Completar feedback"}
+                    {sessionSummary.status === "canceled"
+                      ? "Sesion cancelada"
+                      : feedbackComplete(sessionSummary.feedback)
+                        ? "Editar feedback"
+                        : "Completar feedback"}
                   </button>
                 </div>
               </div>
@@ -296,8 +307,12 @@ const DashboardStep = ({
                         {formatSessionDate(session.createdAt)}
                       </p>
                     </div>
-                    <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-                      {difficultyLabels[session.difficulty]}
+                    <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${
+                      session.status === "canceled"
+                        ? "bg-destructive/10 text-destructive"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {session.status === "canceled" ? "Cancelada" : difficultyLabels[session.difficulty]}
                     </span>
                   </div>
 
@@ -316,27 +331,37 @@ const DashboardStep = ({
                     </p>
                   </div>
 
-                  <div className="mt-auto flex items-stretch gap-3 pt-4">
-                    {session.videoUrl ? (
+                  <div className="mt-auto grid grid-cols-1 gap-2 pt-4 sm:grid-cols-3">
+                    {getAudioUrl(session) ? (
                       <a
-                        href={session.videoUrl}
+                        href={getAudioUrl(session) ?? undefined}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-white px-3 py-3 text-center text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
                       >
-                        <PlayCircle className="h-4 w-4" />
-                        Video
+                        <Headphones className="h-4 w-4" />
+                        Audio
                       </a>
                     ) : (
-                      <div className="inline-flex flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                        Video pendiente
+                      <div className="inline-flex items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-3 py-3 text-center text-sm font-medium text-muted-foreground">
+                        Audio pendiente
                       </div>
                     )}
                     <button
                       onClick={() => onOpenFeedback(session.id)}
-                      className="flex-1 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
+                      disabled={session.status === "canceled"}
+                      className="rounded-lg border border-secondary/30 bg-secondary/5 px-3 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10 disabled:pointer-events-none disabled:opacity-50"
                     >
                       {feedbackComplete(session.feedback) ? "Ver feedback" : "Responder feedback"}
+                    </button>
+                    <button
+                      onClick={() => onCancelSession(session.id)}
+                      disabled={session.status === "canceled"}
+                      className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm font-semibold text-destructive transition-colors hover:border-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
+                      title="Cancelar sesion"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Cancelar
                     </button>
                   </div>
                 </article>

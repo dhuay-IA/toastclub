@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS vr_sessions (
   session_code VARCHAR(32) NOT NULL,
   vr_app VARCHAR(100) NOT NULL,
   scenario_key VARCHAR(100) NOT NULL,
-  status ENUM('active', 'completed') NOT NULL DEFAULT 'active',
+  status ENUM('active', 'completed', 'canceled') NOT NULL DEFAULT 'active',
   metadata_json JSON DEFAULT NULL,
   result_json JSON DEFAULT NULL,
   video_url VARCHAR(2048) DEFAULT NULL,
