@@ -4,6 +4,9 @@ interface ImprovisationConfigStepProps {
   onComplete: (config: {
     textId: string;
     textTitle: string;
+    promptWord: string;
+    textPrompt: string;
+    selectedTags: string[];
     duration: number;
     scheduledAt: string;
   }) => void;
@@ -19,6 +22,17 @@ const SAMPLE_TEXTS = [
   { id: "txt-007", title: "La exploración espacial debería ser prioridad global", tags: ["ciencia", "debate", "tecnología"] },
   { id: "txt-008", title: "Las criptomonedas reemplazarán al dinero tradicional", tags: ["finanzas", "debate", "tecnología"] },
 ];
+
+const PROMPT_WORDS_BY_TEXT_ID: Record<string, string> = {
+  "txt-001": "automatizacion",
+  "txt-002": "autonomia",
+  "txt-003": "participacion",
+  "txt-004": "oportunidad",
+  "txt-005": "experiencia",
+  "txt-006": "responsabilidad",
+  "txt-007": "frontera",
+  "txt-008": "confianza",
+};
 
 const ALL_TAGS = Array.from(new Set(SAMPLE_TEXTS.flatMap((t) => t.tags))).sort();
 
@@ -63,9 +77,14 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
 
   const handleSubmit = () => {
     if (!chosen) return;
+    const promptWord = PROMPT_WORDS_BY_TEXT_ID[chosen.id] ?? "idea";
+    const textPrompt = `Improvisa sobre "${promptWord}" conectandolo con el tema: ${chosen.title}.`;
     onComplete({
       textId: chosen.id,
       textTitle: chosen.title,
+      promptWord,
+      textPrompt,
+      selectedTags: chosen.tags,
       duration: Number(duration),
       scheduledAt: new Date(scheduledAt).toISOString(),
     });
@@ -138,6 +157,20 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
             </div>
           )}
         </div>
+
+        {chosen ? (
+          <div className="mb-6 rounded-xl border border-secondary/20 bg-secondary/5 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Palabra guia
+            </p>
+            <p className="mt-2 text-lg font-semibold text-foreground">
+              {PROMPT_WORDS_BY_TEXT_ID[chosen.id] ?? "idea"}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Improvisa conectando esta palabra con el tema seleccionado.
+            </p>
+          </div>
+        ) : null}
 
         {/* Duration */}
         <div className="mb-6">

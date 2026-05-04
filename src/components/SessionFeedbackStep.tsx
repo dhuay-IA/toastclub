@@ -14,6 +14,9 @@ type SessionDetails = {
   totalMinutes?: number;
   slideCount?: number;
   textTitle?: string;
+  promptWord?: string;
+  textPrompt?: string;
+  selectedTags?: string[];
   duration?: number;
 };
 
@@ -145,6 +148,18 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
                       ? session.textTitle ?? "Tema no disponible"
                       : session.fileName ?? "Archivo no disponible"}
                   </p>
+                  {session.mode === "improvisation" && session.promptWord ? (
+                    <p>
+                      <span className="font-semibold text-foreground">Palabra guia:</span>{" "}
+                      {session.promptWord}
+                    </p>
+                  ) : null}
+                  {session.mode === "improvisation" && session.textPrompt ? (
+                    <p>
+                      <span className="font-semibold text-foreground">Consigna:</span>{" "}
+                      {session.textPrompt}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </aside>

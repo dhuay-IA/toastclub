@@ -297,6 +297,9 @@ export function getVrSessions(token: string) {
         slideCount?: number;
         slideImages?: string[];
         textTitle?: string;
+        promptWord?: string;
+        textPrompt?: string;
+        selectedTags?: string[];
         scheduledAt?: string;
       } | null;
       result: unknown;
@@ -324,6 +327,9 @@ export function createVrSession(
       slideCount?: number;
       slideImages?: string[];
       textTitle?: string;
+      promptWord?: string;
+      textPrompt?: string;
+      selectedTags?: string[];
       scheduledAt?: string;
     };
   }
@@ -342,6 +348,9 @@ export function createVrSession(
       slideCount?: number;
       slideImages?: string[];
       textTitle?: string;
+      promptWord?: string;
+      textPrompt?: string;
+      selectedTags?: string[];
       scheduledAt?: string;
     } | null;
     audioUrl?: string | null;

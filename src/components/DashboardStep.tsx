@@ -1,4 +1,4 @@
-import { ArrowRight, ChartColumnBig, Clock3, Headphones, History, LayoutDashboard, Mic2, Presentation, Sparkles, XCircle } from "lucide-react";
+import { ArrowRight, ChartColumnBig, Headphones, History, LayoutDashboard, Mic2, Presentation, Sparkles, XCircle } from "lucide-react";
 
 export type SessionFeedback = {
   confidence: string;
@@ -23,6 +23,9 @@ export type SessionSummary = {
   slideCount?: number;
   previewImage?: string;
   textTitle?: string;
+  promptWord?: string;
+  textPrompt?: string;
+  selectedTags?: string[];
   duration?: number;
 };
 
@@ -90,6 +93,17 @@ const DashboardStep = ({
   sessionHistory,
   isAdmin = false,
 }: DashboardStepProps) => {
+  const activeSessions = sessionHistory.filter(
+    (session) => session.status !== "canceled"
+  );
+  const feedbackCount = activeSessions.filter((session) =>
+    feedbackComplete(session.feedback)
+  ).length;
+  const totalPracticeMinutes = activeSessions.reduce(
+    (total, session) => total + (session.duration ?? session.totalMinutes ?? 0),
+    0
+  );
+
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
       <div className="space-y-6">
@@ -131,18 +145,31 @@ const DashboardStep = ({
 
             <div className="rounded-2xl border border-border/70 bg-white/70 p-6">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                Estado
+                Progreso
               </p>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
-                  <Clock3 className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">
-                    Historial con audio y feedback
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="rounded-xl border border-border/60 bg-white/75 p-3">
+                  <p className="text-lg font-bold text-foreground">
+                    {activeSessions.length}
                   </p>
-                  <p className="text-xs text-muted-foreground">
-                    Cada sesion tiene su propio registro y formulario.
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Sesiones
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-white/75 p-3">
+                  <p className="text-lg font-bold text-foreground">
+                    {totalPracticeMinutes}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Minutos
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border/60 bg-white/75 p-3">
+                  <p className="text-lg font-bold text-foreground">
+                    {feedbackCount}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Feedback
                   </p>
                 </div>
               </div>
@@ -236,6 +263,11 @@ const DashboardStep = ({
                       ? sessionSummary.textTitle ?? "Tema no disponible"
                       : sessionSummary.fileName ?? "Archivo no disponible"}
                   </p>
+                  {sessionSummary.mode === "improvisation" && sessionSummary.promptWord ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Palabra guia: {sessionSummary.promptWord}
+                    </p>
+                  ) : null}
                   <p className="mt-2 text-xs text-muted-foreground">
                     {difficultyLabels[sessionSummary.difficulty]}
                   </p>
@@ -339,6 +371,23 @@ const DashboardStep = ({
                         ? session.textTitle ?? "Tema no disponible"
                         : session.fileName ?? "Archivo no disponible"}
                     </p>
+                    {session.mode === "improvisation" && session.promptWord ? (
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Palabra guia: {session.promptWord}
+                      </p>
+                    ) : null}
+                    {session.mode === "improvisation" && session.selectedTags?.length ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {session.selectedTags.map((tag) => (
+                          <span
+                            key={`${session.id}-${tag}`}
+                            className="rounded-full bg-muted px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="mt-auto grid grid-cols-1 gap-2 pt-4 sm:grid-cols-3">

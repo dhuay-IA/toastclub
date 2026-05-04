@@ -6,6 +6,9 @@ interface SessionReadyStepProps {
   slideCount?: number;
   slideImages?: string[];
   textTitle?: string;
+  promptWord?: string;
+  textPrompt?: string;
+  selectedTags?: string[];
   duration?: number;
   scheduledAt?: string;
   difficulty: "easy" | "medium" | "hard";
@@ -40,6 +43,9 @@ const SessionReadyStep = ({
   slideCount,
   slideImages,
   textTitle,
+  promptWord,
+  textPrompt,
+  selectedTags,
   duration,
   scheduledAt,
   difficulty,
@@ -109,6 +115,26 @@ const SessionReadyStep = ({
                   {textTitle}
                 </span>
               </div>
+              {promptWord ? (
+                <div className="flex justify-between border-b border-border/50 py-2 text-sm">
+                  <span className="text-muted-foreground">Palabra guia</span>
+                  <span className="text-sm text-foreground">{promptWord}</span>
+                </div>
+              ) : null}
+              {textPrompt ? (
+                <div className="border-b border-border/50 py-2 text-sm">
+                  <span className="text-muted-foreground">Consigna</span>
+                  <p className="mt-1 text-sm text-foreground">{textPrompt}</p>
+                </div>
+              ) : null}
+              {selectedTags?.length ? (
+                <div className="flex justify-between gap-4 border-b border-border/50 py-2 text-sm">
+                  <span className="text-muted-foreground">Tags</span>
+                  <span className="text-right text-sm text-foreground">
+                    {selectedTags.join(", ")}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex justify-between border-b border-border/50 py-2 text-sm">
                 <span className="text-muted-foreground">Duración</span>
                 <span className="text-sm text-foreground">{duration} min</span>

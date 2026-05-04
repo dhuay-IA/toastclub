@@ -17,6 +17,9 @@ export async function createPracticeSession(params: {
   slideCount?: number;
   slideImages?: string[];
   textTitle?: string;
+  promptWord?: string;
+  textPrompt?: string;
+  selectedTags?: string[];
   duration?: number;
   scheduledAt?: string;
 }) {
@@ -29,6 +32,9 @@ export async function createPracticeSession(params: {
     slideCount,
     slideImages,
     textTitle,
+    promptWord,
+    textPrompt,
+    selectedTags,
     duration,
     scheduledAt,
   } = params;
@@ -60,6 +66,9 @@ export async function createPracticeSession(params: {
       slideCount,
       slideImages,
       textTitle,
+      promptWord,
+      textPrompt,
+      selectedTags,
       scheduledAt,
     },
   });

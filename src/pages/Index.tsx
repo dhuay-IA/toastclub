@@ -90,6 +90,9 @@ const Index = () => {
   const [slideCount, setSlideCount] = useState(0);
   const [slideImages, setSlideImages] = useState<string[]>([]);
   const [textTitle, setTextTitle] = useState("");
+  const [promptWord, setPromptWord] = useState("");
+  const [textPrompt, setTextPrompt] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [duration, setDuration] = useState(3);
   const [scheduledAt, setScheduledAt] = useState("");
   const [otpResendCount, setOtpResendCount] = useState(0);
@@ -113,6 +116,9 @@ const Index = () => {
         slideCount?: number;
         slideImages?: string[];
         textTitle?: string;
+        promptWord?: string;
+        textPrompt?: string;
+        selectedTags?: string[];
         scheduledAt?: string;
       } | null;
       status?: "active" | "completed" | "canceled";
@@ -135,6 +141,9 @@ const Index = () => {
       slideCount: session.metadata?.slideCount,
       previewImage: session.metadata?.slideImages?.[0],
       textTitle: session.metadata?.textTitle,
+      promptWord: session.metadata?.promptWord,
+      textPrompt: session.metadata?.textPrompt,
+      selectedTags: session.metadata?.selectedTags,
       duration: session.metadata?.duration,
     }),
     [email]
@@ -205,6 +214,9 @@ const Index = () => {
           slideCount?: number;
           slideImages?: string[];
           textTitle?: string;
+          promptWord?: string;
+          textPrompt?: string;
+          selectedTags?: string[];
           scheduledAt?: string;
         } | null;
         videoUrl?: string | null;
@@ -393,10 +405,16 @@ const Index = () => {
   const handleImprovConfig = (config: {
     textId: string;
     textTitle: string;
+    promptWord: string;
+    textPrompt: string;
+    selectedTags: string[];
     duration: number;
     scheduledAt: string;
   }) => {
     setTextTitle(config.textTitle);
+    setPromptWord(config.promptWord);
+    setTextPrompt(config.textPrompt);
+    setSelectedTags(config.selectedTags);
     setDuration(config.duration);
     setScheduledAt(config.scheduledAt);
     setCurrentStep("difficulty");
@@ -429,6 +447,9 @@ const Index = () => {
       slideCount,
       slideImages,
       textTitle,
+      promptWord,
+      textPrompt,
+      selectedTags,
       duration,
       scheduledAt,
     });
@@ -457,6 +478,9 @@ const Index = () => {
       slideCount,
       previewImage: slideImages[0],
       textTitle,
+      promptWord,
+      textPrompt,
+      selectedTags,
       duration,
     };
 
@@ -692,6 +716,9 @@ const Index = () => {
             slideCount={slideCount}
             slideImages={slideImages}
             textTitle={textTitle}
+            promptWord={promptWord}
+            textPrompt={textPrompt}
+            selectedTags={selectedTags}
             duration={duration}
             scheduledAt={scheduledAt}
             onBackToDashboard={() => setCurrentStep("dashboard")}
