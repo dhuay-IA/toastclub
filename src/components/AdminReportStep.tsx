@@ -36,6 +36,8 @@ const formatDate = (value: string) =>
     timeStyle: "short",
   }).format(new Date(value));
 
+const formatOptionalDate = (value?: string) => (value ? formatDate(value) : "Por confirmar");
+
 const csvEscape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
 
 const downloadCsv = (users: AdminUserRecord[], sessions: Array<SessionSummary & { email: string }>) => {
@@ -46,13 +48,26 @@ const downloadCsv = (users: AdminUserRecord[], sessions: Array<SessionSummary & 
   });
 
   const lines = [
-    ["Tipo", "Email", "Nombre", "Total Sesiones", "Ultimo Ingreso", "Modo", "Dificultad", "Fecha Sesion"],
+    [
+      "Tipo",
+      "Email",
+      "Nombre",
+      "Total Sesiones",
+      "Ultimo Ingreso",
+      "Modo",
+      "Dificultad",
+      "Fecha Sesion",
+      "Fecha Programada",
+      "Estado",
+    ],
     ...users.map((user) => [
       "Usuario",
       user.email,
       user.name,
       sessionsByUser.get(user.email) ?? 0,
       formatDate(user.lastSeenAt),
+      "",
+      "",
       "",
       "",
       "",
@@ -66,6 +81,8 @@ const downloadCsv = (users: AdminUserRecord[], sessions: Array<SessionSummary & 
       session.mode === "improvisation" ? "Improvisacion" : "Presentacion",
       session.difficulty,
       formatDate(session.createdAt),
+      formatOptionalDate(session.scheduledAt),
+      session.status ?? "active",
     ]),
   ];
 
@@ -265,6 +282,9 @@ const AdminReportStep = ({
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
                       {formatDate(session.createdAt)}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Programada: {formatOptionalDate(session.scheduledAt)}
                     </p>
                   </article>
                 ))}

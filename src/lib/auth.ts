@@ -270,7 +270,12 @@ export function getAdminReport(token: string) {
       name: string;
       mode: "improvisation" | "presentation";
       difficulty: "easy" | "medium" | "hard";
+      scheduledAt?: string;
       createdAt: string;
+      status?: "active" | "completed" | "canceled";
+      metadata?: {
+        scheduledAt?: string;
+      } | null;
     }>;
   }>("/api/admin/report", token);
 }
@@ -292,6 +297,7 @@ export function getVrSessions(token: string) {
         slideCount?: number;
         slideImages?: string[];
         textTitle?: string;
+        scheduledAt?: string;
       } | null;
       result: unknown;
       audioUrl?: string | null;
@@ -318,6 +324,7 @@ export function createVrSession(
       slideCount?: number;
       slideImages?: string[];
       textTitle?: string;
+      scheduledAt?: string;
     };
   }
 ) {
@@ -335,6 +342,7 @@ export function createVrSession(
       slideCount?: number;
       slideImages?: string[];
       textTitle?: string;
+      scheduledAt?: string;
     } | null;
     audioUrl?: string | null;
     videoUrl?: string | null;

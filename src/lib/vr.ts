@@ -18,6 +18,7 @@ export async function createPracticeSession(params: {
   slideImages?: string[];
   textTitle?: string;
   duration?: number;
+  scheduledAt?: string;
 }) {
   const {
     token,
@@ -29,6 +30,7 @@ export async function createPracticeSession(params: {
     slideImages,
     textTitle,
     duration,
+    scheduledAt,
   } = params;
 
   if (!token) {
@@ -58,6 +60,7 @@ export async function createPracticeSession(params: {
       slideCount,
       slideImages,
       textTitle,
+      scheduledAt,
     },
   });
 

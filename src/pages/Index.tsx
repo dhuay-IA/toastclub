@@ -91,6 +91,7 @@ const Index = () => {
   const [slideImages, setSlideImages] = useState<string[]>([]);
   const [textTitle, setTextTitle] = useState("");
   const [duration, setDuration] = useState(3);
+  const [scheduledAt, setScheduledAt] = useState("");
   const [otpResendCount, setOtpResendCount] = useState(0);
   const [authToken, setAuthToken] = useState("");
   const [userRole, setUserRole] = useState<"student" | "admin">("student");
@@ -112,6 +113,7 @@ const Index = () => {
         slideCount?: number;
         slideImages?: string[];
         textTitle?: string;
+        scheduledAt?: string;
       } | null;
       status?: "active" | "completed" | "canceled";
       audioUrl?: string | null;
@@ -125,6 +127,7 @@ const Index = () => {
       difficulty: session.metadata?.difficulty ?? "medium",
       status: session.status ?? "active",
       createdAt: session.createdAt,
+      scheduledAt: session.metadata?.scheduledAt,
       audioUrl: session.audioUrl ?? session.videoUrl ?? null,
       videoUrl: session.videoUrl ?? null,
       fileName: session.metadata?.fileName,
@@ -202,6 +205,7 @@ const Index = () => {
           slideCount?: number;
           slideImages?: string[];
           textTitle?: string;
+          scheduledAt?: string;
         } | null;
         videoUrl?: string | null;
         audioUrl?: string | null;
@@ -282,12 +286,17 @@ const Index = () => {
       const report = res.data as
         | {
             users?: UserAccessRecord[];
-            sessions?: SessionRecord[];
+            sessions?: Array<SessionRecord & { metadata?: { scheduledAt?: string } | null }>;
           }
         | undefined;
 
       setAdminReportUsers(report?.users ?? []);
-      setAdminReportSessions(report?.sessions ?? []);
+      setAdminReportSessions(
+        (report?.sessions ?? []).map((session) => ({
+          ...session,
+          scheduledAt: session.scheduledAt ?? session.metadata?.scheduledAt,
+        }))
+      );
       setAdminReportLoading(false);
     })();
 
@@ -385,9 +394,11 @@ const Index = () => {
     textId: string;
     textTitle: string;
     duration: number;
+    scheduledAt: string;
   }) => {
     setTextTitle(config.textTitle);
     setDuration(config.duration);
+    setScheduledAt(config.scheduledAt);
     setCurrentStep("difficulty");
   };
 
@@ -397,11 +408,13 @@ const Index = () => {
     totalMinutes: number;
     slideCount: number;
     slideImages: string[];
+    scheduledAt: string;
   }) => {
     setFileName(config.fileName);
     setTotalMinutes(config.totalMinutes);
     setSlideCount(config.slideCount);
     setSlideImages(config.slideImages);
+    setScheduledAt(config.scheduledAt);
     setCurrentStep("difficulty");
   };
 
@@ -417,6 +430,7 @@ const Index = () => {
       slideImages,
       textTitle,
       duration,
+      scheduledAt,
     });
 
     if (!creation.success) {
@@ -435,6 +449,7 @@ const Index = () => {
       difficulty: selectedDifficulty,
       status: "active",
       createdAt: creation.createdAt,
+      scheduledAt,
       videoUrl: creation.videoUrl ?? null,
       audioUrl: creation.audioUrl ?? creation.videoUrl ?? null,
       fileName,
@@ -678,6 +693,7 @@ const Index = () => {
             slideImages={slideImages}
             textTitle={textTitle}
             duration={duration}
+            scheduledAt={scheduledAt}
             onBackToDashboard={() => setCurrentStep("dashboard")}
           />
         )}

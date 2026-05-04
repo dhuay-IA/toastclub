@@ -14,6 +14,7 @@ export type SessionSummary = {
   difficulty: "easy" | "medium" | "hard";
   status?: "active" | "completed" | "canceled";
   createdAt: string;
+  scheduledAt?: string;
   audioUrl?: string | null;
   videoUrl?: string | null;
   feedback?: SessionFeedback;
@@ -65,6 +66,9 @@ const formatSessionDate = (value: string) =>
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
+
+const formatScheduledDate = (value?: string) =>
+  value ? formatSessionDate(value) : "Fecha por confirmar";
 
 const feedbackComplete = (feedback?: SessionFeedback) =>
   Boolean(
@@ -235,6 +239,9 @@ const DashboardStep = ({
                   <p className="mt-2 text-xs text-muted-foreground">
                     {difficultyLabels[sessionSummary.difficulty]}
                   </p>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Programada: {formatScheduledDate(sessionSummary.scheduledAt)}
+                  </p>
                 </div>
 
                 <div className="flex gap-3">
@@ -305,6 +312,9 @@ const DashboardStep = ({
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {formatSessionDate(session.createdAt)}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Programada: {formatScheduledDate(session.scheduledAt)}
                       </p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${

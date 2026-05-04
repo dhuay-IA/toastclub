@@ -1,7 +1,12 @@
 import { useState } from "react";
 
 interface ImprovisationConfigStepProps {
-  onComplete: (config: { textId: string; textTitle: string; duration: number }) => void;
+  onComplete: (config: {
+    textId: string;
+    textTitle: string;
+    duration: number;
+    scheduledAt: string;
+  }) => void;
 }
 
 const SAMPLE_TEXTS = [
@@ -17,11 +22,18 @@ const SAMPLE_TEXTS = [
 
 const ALL_TAGS = Array.from(new Set(SAMPLE_TEXTS.flatMap((t) => t.tags))).sort();
 
+const getDefaultScheduleValue = () => {
+  const nextHour = new Date();
+  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+  return nextHour.toISOString().slice(0, 16);
+};
+
 const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) => {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState<string | null>(null);
   const [duration, setDuration] = useState("3");
+  const [scheduledAt, setScheduledAt] = useState(getDefaultScheduleValue);
 
   const normalizeDurationInput = (value: string) => {
     if (!value) return "";
@@ -55,6 +67,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
       textId: chosen.id,
       textTitle: chosen.title,
       duration: Number(duration),
+      scheduledAt: new Date(scheduledAt).toISOString(),
     });
   };
 
@@ -127,7 +140,7 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
         </div>
 
         {/* Duration */}
-        <div className="mb-8">
+        <div className="mb-6">
           <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
             Duración de improvisación
           </label>
@@ -149,9 +162,22 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
           </div>
         </div>
 
+        <div className="mb-8">
+          <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+            Fecha y hora de practica
+          </label>
+          <input
+            type="datetime-local"
+            value={scheduledAt}
+            min={getDefaultScheduleValue()}
+            onChange={(e) => setScheduledAt(e.target.value)}
+            className="input-field"
+          />
+        </div>
+
         <button
           onClick={handleSubmit}
-          disabled={!selectedText}
+          disabled={!selectedText || !scheduledAt}
           className="btn-primary w-full"
         >
           CONTINUAR

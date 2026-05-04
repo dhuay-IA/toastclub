@@ -11,8 +11,15 @@ interface PresentationConfigStepProps {
     totalMinutes: number;
     slideCount: number;
     slideImages: string[];
+    scheduledAt: string;
   }) => void;
 }
+
+const getDefaultScheduleValue = () => {
+  const nextHour = new Date();
+  nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+  return nextHour.toISOString().slice(0, 16);
+};
 
 const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => {
   const [file, setFile] = useState<File | null>(null);
@@ -21,6 +28,7 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
   const [slideCount, setSlideCount] = useState(0);
   const [slideImages, setSlideImages] = useState<string[]>([]);
   const [minutes, setMinutes] = useState("10");
+  const [scheduledAt, setScheduledAt] = useState(getDefaultScheduleValue);
   const [error, setError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -106,6 +114,7 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
       totalMinutes: Number(minutes),
       slideCount,
       slideImages,
+      scheduledAt: new Date(scheduledAt).toISOString(),
     });
   };
 
@@ -180,7 +189,7 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
         {error && <p className="mb-4 text-sm text-destructive">{error}</p>}
 
         {processed && (
-          <div className="mb-8">
+          <div className="mb-6">
             <label className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Tiempo total de exposicion
             </label>
@@ -203,6 +212,21 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
             <p className="mt-2 text-xs text-muted-foreground/60">
               La sesion finalizara automaticamente al cumplirse este tiempo.
             </p>
+          </div>
+        )}
+
+        {processed && (
+          <div className="mb-8">
+            <label className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Fecha y hora de practica
+            </label>
+            <input
+              type="datetime-local"
+              value={scheduledAt}
+              min={getDefaultScheduleValue()}
+              onChange={(e) => setScheduledAt(e.target.value)}
+              className="input-field"
+            />
           </div>
         )}
 
@@ -233,7 +257,7 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
 
         <button
           onClick={handleSubmit}
-          disabled={!processed}
+          disabled={!processed || !scheduledAt}
           className="btn-primary w-full"
         >
           CONTINUAR

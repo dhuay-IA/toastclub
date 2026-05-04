@@ -205,6 +205,7 @@ export const getVrSessionPackageByCode = async (req, res) => {
       slideImages: Array.isArray(metadata.slideImages) ? metadata.slideImages : [],
       fileName: metadata.fileName ?? null,
       textTitle: metadata.textTitle ?? null,
+      scheduledAt: metadata.scheduledAt ?? null,
       createdAt: session.created_at,
       startedAt: session.started_at,
       payload: metadata,

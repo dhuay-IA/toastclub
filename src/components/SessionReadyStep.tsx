@@ -7,6 +7,7 @@ interface SessionReadyStepProps {
   slideImages?: string[];
   textTitle?: string;
   duration?: number;
+  scheduledAt?: string;
   difficulty: "easy" | "medium" | "hard";
   onBackToDashboard: () => void;
 }
@@ -23,6 +24,14 @@ const difficultyColors = {
   hard: "text-destructive",
 };
 
+const formatScheduledDate = (value?: string) =>
+  value
+    ? new Intl.DateTimeFormat("es-PE", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(value))
+    : "Fecha por confirmar";
+
 const SessionReadyStep = ({
   sessionCode,
   mode,
@@ -32,6 +41,7 @@ const SessionReadyStep = ({
   slideImages,
   textTitle,
   duration,
+  scheduledAt,
   difficulty,
   onBackToDashboard,
 }: SessionReadyStepProps) => {
@@ -65,6 +75,12 @@ const SessionReadyStep = ({
             <span className="text-muted-foreground">Dificultad</span>
             <span className={`text-sm font-medium ${difficultyColors[difficulty]}`}>
               {difficultyLabels[difficulty]}
+            </span>
+          </div>
+          <div className="flex justify-between gap-4 border-b border-border/50 py-2 text-sm">
+            <span className="text-muted-foreground">Programada</span>
+            <span className="text-right text-sm text-foreground">
+              {formatScheduledDate(scheduledAt)}
             </span>
           </div>
 
