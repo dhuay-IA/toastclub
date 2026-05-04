@@ -25,7 +25,7 @@ app.use(
     origin: process.env.CORS_ORIGIN?.split(",").map((origin) => origin.trim()) || "*",
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "50mb" }));
 app.use("/uploads", express.static(path.resolve(__dirname, "uploads")));
 
 app.get("/api/health", (_req, res) => {
