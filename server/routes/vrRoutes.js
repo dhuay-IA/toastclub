@@ -6,6 +6,7 @@ import {
   getVrSessionPackageByCode,
   getVrAccess,
   listMyVrSessions,
+  saveMyVrSessionFeedback,
   startVrSession,
   uploadVrSessionVideoByCode,
 } from "../controllers/vrController.js";
@@ -44,6 +45,11 @@ router.post(
   "/vr/session/:sessionId/complete",
   asyncHandler(authenticateToken),
   asyncHandler(finishVrSession)
+);
+router.post(
+  "/vr/session/:sessionId/feedback",
+  asyncHandler(authenticateToken),
+  asyncHandler(saveMyVrSessionFeedback)
 );
 router.post(
   "/vr/session/:sessionId/cancel",

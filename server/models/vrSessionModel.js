@@ -124,6 +124,18 @@ export const completeVrSession = async ({ sessionId, userId, result }) => {
   return findVrSessionByIdForUser({ sessionId, userId });
 };
 
+export const saveVrSessionFeedback = async ({ sessionId, userId, result }) => {
+  await pool.execute(
+    `UPDATE vr_sessions
+     SET result_json = ?,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND user_id = ?`,
+    [JSON.stringify(result ?? null), sessionId, userId]
+  );
+
+  return findVrSessionByIdForUser({ sessionId, userId });
+};
+
 export const cancelVrSession = async ({ sessionId, userId }) => {
   await pool.execute(
     `UPDATE vr_sessions

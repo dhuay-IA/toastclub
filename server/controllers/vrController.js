@@ -7,6 +7,7 @@ import {
   findVrSessionByCode,
   findVrSessionByIdForUser,
   listVrSessionsByUser,
+  saveVrSessionFeedback,
 } from "../models/vrSessionModel.js";
 import { promises as fs } from "fs";
 import path from "path";
@@ -273,6 +274,47 @@ export const finishVrSession = async (req, res) => {
   return res.status(200).json({
     success: true,
     message: "VR session completed successfully.",
+    data: serializeSession(session),
+  });
+};
+
+export const saveMyVrSessionFeedback = async (req, res) => {
+  const { feedback } = req.body;
+  const sessionId = Number(req.params.sessionId);
+
+  if (!feedback || typeof feedback !== "object") {
+    return res.status(400).json({
+      success: false,
+      message: "feedback is required.",
+    });
+  }
+
+  const existingSession = await findVrSessionByIdForUser({
+    sessionId,
+    userId: req.user.id,
+  });
+
+  if (!existingSession) {
+    return res.status(404).json({
+      success: false,
+      message: "VR session not found.",
+    });
+  }
+
+  const existingResult = parseJsonColumn(existingSession.result_json) ?? {};
+  const session = await saveVrSessionFeedback({
+    sessionId,
+    userId: req.user.id,
+    result: {
+      ...existingResult,
+      feedback,
+      feedbackUpdatedAt: new Date().toISOString(),
+    },
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: "VR session feedback saved successfully.",
     data: serializeSession(session),
   });
 };

@@ -369,3 +369,25 @@ export function cancelVrSession(token: string, sessionId: string) {
     createdAt: string;
   }>(`/api/vr/session/${sessionId}/cancel`, token, {});
 }
+
+export function saveVrSessionFeedback(
+  token: string,
+  sessionId: string,
+  feedback: {
+    confidence: string;
+    audienceReaction: string;
+    improvement: string;
+    notes: string;
+  }
+) {
+  return postToAuthenticatedApi<{
+    id: number;
+    sessionCode: string;
+    status: "active" | "completed" | "canceled";
+    result?: {
+      feedback?: typeof feedback;
+      feedbackUpdatedAt?: string;
+    } | null;
+    updatedAt: string;
+  }>(`/api/vr/session/${sessionId}/feedback`, token, { feedback });
+}

@@ -14,7 +14,13 @@ import PresentationConfigStep from "@/components/PresentationConfigStep";
 import DifficultyStep from "@/components/DifficultyStep";
 import SessionReadyStep from "@/components/SessionReadyStep";
 import StepTimeline from "@/components/StepTimeline";
-import { cancelVrSession, getAdminReport, getProfile, getVrSessions } from "@/lib/auth";
+import {
+  cancelVrSession,
+  getAdminReport,
+  getProfile,
+  getVrSessions,
+  saveVrSessionFeedback,
+} from "@/lib/auth";
 import { createPracticeSession } from "@/lib/vr";
 
 type FlowStep =
@@ -122,6 +128,9 @@ const Index = () => {
         scheduledAt?: string;
       } | null;
       status?: "active" | "completed" | "canceled";
+      result?: {
+        feedback?: SessionFeedback;
+      } | null;
       audioUrl?: string | null;
       videoUrl?: string | null;
       createdAt: string;
@@ -132,6 +141,7 @@ const Index = () => {
       mode: session.vrApp === "presentation" ? "presentation" : "improvisation",
       difficulty: session.metadata?.difficulty ?? "medium",
       status: session.status ?? "active",
+      feedback: session.result?.feedback,
       createdAt: session.createdAt,
       scheduledAt: session.metadata?.scheduledAt,
       audioUrl: session.audioUrl ?? session.videoUrl ?? null,
@@ -221,6 +231,9 @@ const Index = () => {
         } | null;
         videoUrl?: string | null;
         audioUrl?: string | null;
+        result?: {
+          feedback?: SessionFeedback;
+        } | null;
         status?: "active" | "completed" | "canceled";
         createdAt: string;
       }>) ?? []).map(mapApiSessionToRecord);
@@ -570,22 +583,23 @@ const Index = () => {
     }));
   };
 
-  const handleSaveSessionFeedback = (sessionIdToUpdate: string, feedback: SessionFeedback) => {
-    const stored = localStorage.getItem(SESSION_HISTORY_KEY);
-    const parsed = stored ? (JSON.parse(stored) as SessionRecord[]) : [];
-    const nextHistory = parsed.map((session) =>
-      session.id === sessionIdToUpdate ? { ...session, feedback } : session
-    );
+  const handleSaveSessionFeedback = async (
+    sessionIdToUpdate: string,
+    feedback: SessionFeedback
+  ) => {
+    if (authToken) {
+      const res = await saveVrSessionFeedback(authToken, sessionIdToUpdate, feedback);
+      if (!res.success) {
+        window.alert(res.message || "No se pudo guardar el feedback.");
+        return;
+      }
 
-    localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(nextHistory));
-    setAllSessions(
-      nextHistory.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    );
-    setSessionHistory(
-      nextHistory
-        .filter((session) => session.email === email)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    );
+      updateSessionRecord(sessionIdToUpdate, (session) => ({ ...session, feedback }));
+      setCurrentStep("dashboard");
+      return;
+    }
+
+    updateSessionRecord(sessionIdToUpdate, (session) => ({ ...session, feedback }));
     setCurrentStep("dashboard");
   };
 
