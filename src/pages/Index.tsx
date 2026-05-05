@@ -49,6 +49,22 @@ type UserAccessRecord = {
   totalSessions?: number;
 };
 
+type AdminReportMetrics = {
+  totalStudents: number;
+  totalSessions: number;
+  improvisationSessions: number;
+  presentationSessions: number;
+  canceledSessions: number;
+  audioSessions: number;
+  feedbackSessions: number;
+  recentSessions: number;
+  difficulty: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
+};
+
 const SESSION_KEY = "toastclub_user";
 const SESSION_NAME_KEY = "toastclub_user_name";
 const SESSION_TOKEN_KEY = "toastclub_token";
@@ -106,6 +122,7 @@ const Index = () => {
   const [userRole, setUserRole] = useState<"student" | "admin">("student");
   const [adminReportUsers, setAdminReportUsers] = useState<UserAccessRecord[]>([]);
   const [adminReportSessions, setAdminReportSessions] = useState<SessionRecord[]>([]);
+  const [adminReportMetrics, setAdminReportMetrics] = useState<AdminReportMetrics | null>(null);
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportError, setAdminReportError] = useState("");
 
@@ -301,6 +318,7 @@ const Index = () => {
       if (!res.success) {
         setAdminReportUsers([]);
         setAdminReportSessions([]);
+        setAdminReportMetrics(null);
         setAdminReportError(
           res.message || "No se pudo cargar el reporte del administrador."
         );
@@ -310,16 +328,24 @@ const Index = () => {
 
       const report = res.data as
         | {
+            metrics?: AdminReportMetrics;
             users?: UserAccessRecord[];
-            sessions?: Array<SessionRecord & { metadata?: { scheduledAt?: string } | null }>;
+            sessions?: Array<
+              SessionRecord & {
+                metadata?: { scheduledAt?: string } | null;
+                result?: { feedback?: SessionFeedback } | null;
+              }
+            >;
           }
         | undefined;
 
+      setAdminReportMetrics(report?.metrics ?? null);
       setAdminReportUsers(report?.users ?? []);
       setAdminReportSessions(
         (report?.sessions ?? []).map((session) => ({
           ...session,
           scheduledAt: session.scheduledAt ?? session.metadata?.scheduledAt,
+          feedback: session.feedback ?? session.result?.feedback,
         }))
       );
       setAdminReportLoading(false);
@@ -613,6 +639,7 @@ const Index = () => {
     setUserRole("student");
     setAdminReportUsers([]);
     setAdminReportSessions([]);
+    setAdminReportMetrics(null);
     setAdminReportError("");
     setOtpResendCount(0);
     setSelectedSessionId(null);
@@ -697,6 +724,7 @@ const Index = () => {
             adminName={userName || formatDisplayName(email)}
             users={adminUsers}
             sessions={adminSessions}
+            metrics={adminReportMetrics}
             isLoading={adminReportLoading}
             error={adminReportError}
             dataSourceLabel="base real"

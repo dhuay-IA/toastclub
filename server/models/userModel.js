@@ -50,10 +50,19 @@ export const updateUserRole = async ({ userId, role }) => {
 
 export const listUsersForAdminReport = async () => {
   const [rows] = await pool.execute(
-    `SELECT id, email, name, role, created_at, updated_at
-     FROM users
-     WHERE role <> 'admin'
-     ORDER BY updated_at DESC, created_at DESC`
+    `SELECT u.id,
+            u.email,
+            u.name,
+            u.role,
+            u.created_at,
+            u.updated_at,
+            COUNT(s.id) AS total_sessions,
+            MAX(s.created_at) AS last_session_at
+     FROM users u
+     LEFT JOIN vr_sessions s ON s.user_id = u.id
+     WHERE u.role <> 'admin'
+     GROUP BY u.id, u.email, u.name, u.role, u.created_at, u.updated_at
+     ORDER BY COALESCE(MAX(s.created_at), u.updated_at) DESC, u.created_at DESC`
   );
 
   return rows;

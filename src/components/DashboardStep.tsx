@@ -1,4 +1,16 @@
-import { ArrowRight, ChartColumnBig, Headphones, History, LayoutDashboard, Mic2, Presentation, Sparkles, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  BarChart3,
+  ChartColumnBig,
+  CheckCircle2,
+  Headphones,
+  History,
+  LayoutDashboard,
+  Mic2,
+  Presentation,
+  Sparkles,
+  XCircle,
+} from "lucide-react";
 
 export type SessionFeedback = {
   confidence: string;
@@ -82,6 +94,12 @@ const feedbackComplete = (feedback?: SessionFeedback) =>
 
 const getAudioUrl = (session: SessionSummary) => session.audioUrl ?? session.videoUrl ?? null;
 
+const getSessionMinutes = (session: SessionSummary) =>
+  session.duration ?? session.totalMinutes ?? 0;
+
+const getPercent = (value: number, total: number) =>
+  total > 0 ? Math.round((value / total) * 100) : 0;
+
 const DashboardStep = ({
   userName,
   onSelectMode,
@@ -100,9 +118,33 @@ const DashboardStep = ({
     feedbackComplete(session.feedback)
   ).length;
   const totalPracticeMinutes = activeSessions.reduce(
-    (total, session) => total + (session.duration ?? session.totalMinutes ?? 0),
+    (total, session) => total + getSessionMinutes(session),
     0
   );
+  const presentationCount = activeSessions.filter(
+    (session) => session.mode === "presentation"
+  ).length;
+  const improvisationCount = activeSessions.filter(
+    (session) => session.mode === "improvisation"
+  ).length;
+  const audioCount = activeSessions.filter((session) => getAudioUrl(session)).length;
+  const recentCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const recentCount = activeSessions.filter(
+    (session) => new Date(session.createdAt).getTime() >= recentCutoff
+  ).length;
+  const difficultyTotals = activeSessions.reduce(
+    (totals, session) => ({
+      ...totals,
+      [session.difficulty]: totals[session.difficulty] + 1,
+    }),
+    { easy: 0, medium: 0, hard: 0 }
+  );
+  const mainDifficulty =
+    (Object.entries(difficultyTotals).sort((a, b) => b[1] - a[1])[0]?.[0] as
+      | keyof typeof difficultyLabels
+      | undefined) ?? "medium";
+  const feedbackPercent = getPercent(feedbackCount, activeSessions.length);
+  const audioPercent = getPercent(audioCount, activeSessions.length);
 
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
@@ -172,6 +214,134 @@ const DashboardStep = ({
                     Feedback
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="glass-card p-6 lg:p-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary/10 text-secondary">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                Progreso personal
+              </p>
+              <h3 className="mt-1 text-lg font-semibold text-foreground">
+                Indicadores de practica
+              </h3>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Ultimos 7 dias
+              </p>
+              <p className="mt-3 text-3xl font-bold text-foreground">{recentCount}</p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                sesiones registradas
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Dificultad frecuente
+              </p>
+              <p className="mt-3 text-3xl font-bold text-foreground">
+                {activeSessions.length ? difficultyLabels[mainDifficulty] : "N/A"}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                segun tus sesiones activas
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Feedback completo
+              </p>
+              <p className="mt-3 text-3xl font-bold text-foreground">
+                {feedbackPercent}%
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {feedbackCount} de {activeSessions.length} sesiones
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Audios recibidos
+              </p>
+              <p className="mt-3 text-3xl font-bold text-foreground">
+                {audioPercent}%
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {audioCount} de {activeSessions.length} sesiones
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-2">
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Practicas por modo
+                </p>
+                <CheckCircle2 className="h-4 w-4 text-secondary" />
+              </div>
+              <div className="mt-5 space-y-4">
+                {[
+                  { label: "Improvisacion", value: improvisationCount },
+                  { label: "Presentacion", value: presentationCount },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">{item.label}</span>
+                      <span className="font-semibold text-foreground">{item.value}</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-secondary"
+                        style={{ width: `${getPercent(item.value, activeSessions.length)}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Practicas por dificultad
+                </p>
+                <ChartColumnBig className="h-4 w-4 text-secondary" />
+              </div>
+              <div className="mt-5 space-y-4">
+                {(["easy", "medium", "hard"] as const).map((level) => (
+                  <div key={level}>
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {difficultyLabels[level]}
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {difficultyTotals[level]}
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{
+                          width: `${getPercent(
+                            difficultyTotals[level],
+                            activeSessions.length
+                          )}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

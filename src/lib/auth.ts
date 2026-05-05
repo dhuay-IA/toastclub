@@ -255,6 +255,21 @@ export function getProfile(token: string) {
 
 export function getAdminReport(token: string) {
   return getFromApi<{
+    metrics?: {
+      totalStudents: number;
+      totalSessions: number;
+      improvisationSessions: number;
+      presentationSessions: number;
+      canceledSessions: number;
+      audioSessions: number;
+      feedbackSessions: number;
+      recentSessions: number;
+      difficulty: {
+        easy: number;
+        medium: number;
+        hard: number;
+      };
+    };
     users: Array<{
       id: number;
       email: string;
@@ -275,6 +290,14 @@ export function getAdminReport(token: string) {
       status?: "active" | "completed" | "canceled";
       metadata?: {
         scheduledAt?: string;
+      } | null;
+      result?: {
+        feedback?: {
+          confidence: string;
+          audienceReaction: string;
+          improvement: string;
+          notes: string;
+        };
       } | null;
     }>;
   }>("/api/admin/report", token);

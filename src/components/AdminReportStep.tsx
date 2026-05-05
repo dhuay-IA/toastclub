@@ -1,11 +1,13 @@
 import {
   BarChart3,
+  CheckCircle2,
   Download,
   GraduationCap,
+  Headphones,
   LayoutDashboard,
   MonitorPlay,
   Presentation,
-  Sparkles,
+  XCircle,
 } from "lucide-react";
 import type { SessionSummary } from "@/components/DashboardStep";
 
@@ -23,11 +25,28 @@ type AdminReportStepProps = {
   adminName: string;
   users: AdminUserRecord[];
   sessions: Array<SessionSummary & { email: string }>;
+  metrics?: AdminReportMetrics | null;
   isLoading?: boolean;
   error?: string;
   dataSourceLabel?: string;
   onBack: () => void;
   onLogout: () => void;
+};
+
+type AdminReportMetrics = {
+  totalStudents: number;
+  totalSessions: number;
+  improvisationSessions: number;
+  presentationSessions: number;
+  canceledSessions: number;
+  audioSessions: number;
+  feedbackSessions: number;
+  recentSessions: number;
+  difficulty: {
+    easy: number;
+    medium: number;
+    hard: number;
+  };
 };
 
 const formatDate = (value: string) =>
@@ -105,16 +124,45 @@ const AdminReportStep = ({
   adminName,
   users,
   sessions,
+  metrics,
   isLoading = false,
   error = "",
   dataSourceLabel = "servidor",
   onBack,
   onLogout,
 }: AdminReportStepProps) => {
-  const totalStudents = users.length;
-  const totalSessions = sessions.length;
-  const improvSessions = sessions.filter((session) => session.mode === "improvisation").length;
-  const presentationSessions = totalSessions - improvSessions;
+  const totalStudents = metrics?.totalStudents ?? users.length;
+  const totalSessions = metrics?.totalSessions ?? sessions.length;
+  const improvSessions =
+    metrics?.improvisationSessions ??
+    sessions.filter((session) => session.mode === "improvisation").length;
+  const presentationSessions =
+    metrics?.presentationSessions ?? totalSessions - improvSessions;
+  const canceledSessions =
+    metrics?.canceledSessions ??
+    sessions.filter((session) => session.status === "canceled").length;
+  const audioSessions =
+    metrics?.audioSessions ??
+    sessions.filter((session) => session.audioUrl ?? session.videoUrl).length;
+  const feedbackSessions =
+    metrics?.feedbackSessions ??
+    sessions.filter((session) => session.feedback).length;
+  const recentSessions =
+    metrics?.recentSessions ??
+    sessions.filter(
+      (session) =>
+        new Date(session.createdAt).getTime() >=
+        Date.now() - 7 * 24 * 60 * 60 * 1000
+    ).length;
+  const difficultyTotals =
+    metrics?.difficulty ??
+    sessions.reduce(
+      (totals, session) => ({
+        ...totals,
+        [session.difficulty]: totals[session.difficulty] + 1,
+      }),
+      { easy: 0, medium: 0, hard: 0 }
+    );
 
   const topUsers = users
     .map((user) => ({
@@ -195,6 +243,104 @@ const AdminReportStep = ({
                 Vista rapida por tipo de entrenamiento.
               </p>
             </article>
+          </div>
+
+          <div className="grid gap-4 border-t border-border/60 px-8 py-7 md:grid-cols-2 xl:grid-cols-4 lg:px-10">
+            <article className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Ultimos 7 dias
+                </p>
+                <BarChart3 className="h-4 w-4 text-secondary" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-foreground">{recentSessions}</p>
+              <p className="mt-2 text-sm text-muted-foreground">sesiones recientes</p>
+            </article>
+
+            <article className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Audios
+                </p>
+                <Headphones className="h-4 w-4 text-secondary" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-foreground">{audioSessions}</p>
+              <p className="mt-2 text-sm text-muted-foreground">grabaciones recibidas</p>
+            </article>
+
+            <article className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Feedback
+                </p>
+                <CheckCircle2 className="h-4 w-4 text-secondary" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-foreground">{feedbackSessions}</p>
+              <p className="mt-2 text-sm text-muted-foreground">formularios completos</p>
+            </article>
+
+            <article className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Canceladas
+                </p>
+                <XCircle className="h-4 w-4 text-destructive" />
+              </div>
+              <p className="mt-3 text-3xl font-bold text-foreground">{canceledSessions}</p>
+              <p className="mt-2 text-sm text-muted-foreground">sesiones anuladas</p>
+            </article>
+          </div>
+
+          <div className="grid gap-5 border-t border-border/60 px-8 pb-7 md:grid-cols-2 lg:px-10">
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-sm font-semibold text-foreground">
+                Distribucion por dificultad
+              </p>
+              <div className="mt-4 grid grid-cols-3 gap-3">
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="text-xl font-bold text-foreground">{difficultyTotals.easy}</p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Facil
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="text-xl font-bold text-foreground">{difficultyTotals.medium}</p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Medio
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="text-xl font-bold text-foreground">{difficultyTotals.hard}</p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Dificil
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-sm font-semibold text-foreground">
+                Estado operativo
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="text-xl font-bold text-foreground">
+                    {Math.max(totalSessions - canceledSessions, 0)}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Vigentes
+                  </p>
+                </div>
+                <div className="rounded-xl bg-muted/60 p-3">
+                  <p className="text-xl font-bold text-foreground">
+                    {totalSessions > 0 ? Math.round((feedbackSessions / totalSessions) * 100) : 0}%
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                    Con feedback
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
