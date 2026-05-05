@@ -20,8 +20,7 @@ export const listAdminReportSessions = async ({ limit = 100 }) => {
      INNER JOIN users u ON u.id = s.user_id
      WHERE u.role <> 'admin'
      ORDER BY s.created_at DESC
-     LIMIT ?`,
-    [boundedLimit]
+     LIMIT ${boundedLimit}`
   );
 
   return rows;

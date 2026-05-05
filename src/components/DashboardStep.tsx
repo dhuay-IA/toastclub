@@ -146,6 +146,80 @@ const DashboardStep = ({
   const feedbackPercent = getPercent(feedbackCount, activeSessions.length);
   const audioPercent = getPercent(audioCount, activeSessions.length);
 
+  if (isAdmin && onOpenAdminReport) {
+    return (
+      <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
+        <div className="space-y-6">
+          <section className="glass-card overflow-hidden">
+            <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-secondary px-8 py-8 text-white lg:px-10">
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-3">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em]">
+                    <LayoutDashboard className="h-3.5 w-3.5" />
+                    Espacio admin
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight">
+                    Hola, {userName}
+                  </h2>
+                  <p className="max-w-2xl text-sm leading-relaxed text-white/85">
+                    Desde aqui puedes revisar estudiantes, sesiones, audios,
+                    feedbacks y actividad general registrada en Railway.
+                  </p>
+                </div>
+
+                <div className="hidden rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm md:block">
+                  <ChartColumnBig className="h-8 w-8 text-white/85" />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-5 px-8 py-7 md:grid-cols-[1.2fr_0.8fr] lg:px-10">
+              <div className="rounded-2xl border border-border/70 bg-white/75 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Reporte operativo
+                </p>
+                <h3 className="mt-2 text-lg font-semibold text-foreground">
+                  Panel real de administracion
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                  Consulta la informacion consolidada de alumnos y practicas sin
+                  entrar al flujo de estudiante.
+                </p>
+                <button
+                  onClick={onOpenAdminReport}
+                  className="mt-5 inline-flex items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
+                >
+                  Abrir reporte administrador
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="rounded-2xl border border-border/70 bg-white/75 p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                  Accesos
+                </p>
+                <div className="mt-4 space-y-3">
+                  <button
+                    onClick={onOpenAdminReport}
+                    className="w-full rounded-lg border border-border bg-white px-4 py-3 text-left text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                  >
+                    Ver estudiantes y sesiones
+                  </button>
+                  <button
+                    onClick={onLogout}
+                    className="w-full rounded-lg border border-border bg-white px-4 py-3 text-left text-sm font-semibold text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
+                  >
+                    Cerrar sesion
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
       <div className="space-y-6">
