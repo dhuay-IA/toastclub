@@ -1,4 +1,8 @@
-import { getAdminReportMetrics, listAdminReportSessions } from "../models/adminModel.js";
+import {
+  buildAdminMetricsFromRecentSessions,
+  getAdminReportMetrics,
+  listAdminReportSessions,
+} from "../models/adminModel.js";
 import { listUsersForAdminReport } from "../models/userModel.js";
 
 const parseJsonColumn = (value) => {
@@ -13,10 +17,19 @@ const parseJsonColumn = (value) => {
 
 export const getAdminReport = async (req, res) => {
   const users = await listUsersForAdminReport();
-  const metrics = await getAdminReportMetrics();
   const sessions = await listAdminReportSessions({
     limit: Number(req.query.limit || 100),
   });
+  const studentIds = users.map((user) => user.id);
+  let metrics = buildAdminMetricsFromRecentSessions(sessions);
+  let metricsIsFallback = true;
+
+  try {
+    metrics = await getAdminReportMetrics({ studentIds });
+    metricsIsFallback = false;
+  } catch (error) {
+    console.warn("Admin metrics fallback:", error?.message || error);
+  }
 
   return res.status(200).json({
     success: true,
@@ -36,6 +49,7 @@ export const getAdminReport = async (req, res) => {
           hard: Number(metrics.hard_sessions ?? 0),
         },
       },
+      metricsIsFallback,
       users: users.map((user) => ({
         id: user.id,
         email: user.email,

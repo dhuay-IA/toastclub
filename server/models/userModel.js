@@ -56,38 +56,31 @@ export const listUsersForAdminReport = async () => {
      ORDER BY id DESC`
   );
 
-  const [sessionTotals] = await pool.execute(
-    `SELECT user_id,
-            COUNT(*) AS total_sessions,
-            MAX(created_at) AS last_session_at
-     FROM vr_sessions
-     GROUP BY user_id`
-  );
+  const usersWithSessionCounts = await Promise.all(
+    users.map(async (user) => {
+      const [sessionRows] = await pool.execute(
+        `SELECT COUNT(*) AS total_sessions,
+                MAX(created_at) AS last_session_at
+         FROM vr_sessions
+         WHERE user_id = ?`,
+        [user.id]
+      );
 
-  const totalsByUserId = new Map(
-    sessionTotals.map((row) => [
-      row.user_id,
-      {
-        totalSessions: Number(row.total_sessions ?? 0),
-        lastSessionAt: row.last_session_at,
-      },
-    ])
-  );
+      const summary = sessionRows[0] ?? {};
 
-  return users
-    .map((user) => {
-      const totals = totalsByUserId.get(user.id);
       return {
         ...user,
-        total_sessions: totals?.totalSessions ?? 0,
-        last_session_at: totals?.lastSessionAt ?? null,
+        total_sessions: Number(summary.total_sessions ?? 0),
+        last_session_at: summary.last_session_at ?? null,
       };
     })
-    .sort((a, b) => {
-      const aTime = new Date(a.last_session_at ?? a.updated_at).getTime();
-      const bTime = new Date(b.last_session_at ?? b.updated_at).getTime();
-      return bTime - aTime;
-    });
+  );
+
+  return usersWithSessionCounts.sort((a, b) => {
+    const aTime = new Date(a.last_session_at ?? a.updated_at).getTime();
+    const bTime = new Date(b.last_session_at ?? b.updated_at).getTime();
+    return bTime - aTime;
+  });
 };
 
 export const storeUserOtp = async ({ userId, otp, expiresAt }) => {
