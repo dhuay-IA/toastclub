@@ -1,5 +1,6 @@
 interface DifficultyStepProps {
   onComplete: (difficulty: "easy" | "medium" | "hard") => void;
+  onBack: () => void;
 }
 
 const difficulties = [
@@ -32,7 +33,7 @@ const difficulties = [
   },
 ];
 
-const DifficultyStep = ({ onComplete }: DifficultyStepProps) => {
+const DifficultyStep = ({ onComplete, onBack }: DifficultyStepProps) => {
   return (
     <div className="step-container py-12">
       <div className="mb-8 text-center">
@@ -64,6 +65,12 @@ const DifficultyStep = ({ onComplete }: DifficultyStepProps) => {
             </div>
           </button>
         ))}
+        <button
+          onClick={onBack}
+          className="w-full rounded-lg border border-border bg-white/80 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-secondary hover:text-secondary"
+        >
+          VOLVER
+        </button>
       </div>
     </div>
   );

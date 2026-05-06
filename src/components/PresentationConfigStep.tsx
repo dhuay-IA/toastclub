@@ -13,6 +13,7 @@ interface PresentationConfigStepProps {
     slideImages: string[];
     scheduledAt: string;
   }) => void;
+  onBack: () => void;
 }
 
 const getDefaultScheduleValue = () => {
@@ -21,7 +22,7 @@ const getDefaultScheduleValue = () => {
   return nextHour.toISOString().slice(0, 16);
 };
 
-const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => {
+const PresentationConfigStep = ({ onComplete, onBack }: PresentationConfigStepProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processed, setProcessed] = useState(false);
@@ -261,6 +262,12 @@ const PresentationConfigStep = ({ onComplete }: PresentationConfigStepProps) => 
           className="btn-primary w-full"
         >
           CONTINUAR
+        </button>
+        <button
+          onClick={onBack}
+          className="mt-3 w-full rounded-lg border border-border bg-white/80 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-secondary hover:text-secondary"
+        >
+          VOLVER
         </button>
       </div>
     </div>

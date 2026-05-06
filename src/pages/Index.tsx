@@ -705,7 +705,12 @@ const Index = () => {
             }}
           />
         )}
-        {currentStep === "terms" && <TermsStep onComplete={handleTerms} />}
+        {currentStep === "terms" && (
+          <TermsStep
+            onComplete={handleTerms}
+            onBack={() => setCurrentStep("otp")}
+          />
+        )}
         {currentStep === "dashboard" && (
           <DashboardStep
             userName={userName || formatDisplayName(email)}
@@ -740,13 +745,26 @@ const Index = () => {
           />
         )}
         {currentStep === "config-improv" && (
-          <ImprovisationConfigStep onComplete={handleImprovConfig} />
+          <ImprovisationConfigStep
+            onComplete={handleImprovConfig}
+            onBack={() => setCurrentStep("dashboard")}
+          />
         )}
         {currentStep === "config-presentation" && (
-          <PresentationConfigStep onComplete={handlePresentationConfig} />
+          <PresentationConfigStep
+            onComplete={handlePresentationConfig}
+            onBack={() => setCurrentStep("dashboard")}
+          />
         )}
         {currentStep === "difficulty" && (
-          <DifficultyStep onComplete={handleDifficulty} />
+          <DifficultyStep
+            onComplete={handleDifficulty}
+            onBack={() =>
+              setCurrentStep(
+                mode === "improvisation" ? "config-improv" : "config-presentation"
+              )
+            }
+          />
         )}
         {currentStep === "ready" && (
           <SessionReadyStep

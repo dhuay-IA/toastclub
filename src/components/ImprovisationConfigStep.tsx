@@ -10,6 +10,7 @@ interface ImprovisationConfigStepProps {
     duration: number;
     scheduledAt: string;
   }) => void;
+  onBack: () => void;
 }
 
 const SAMPLE_TEXTS = [
@@ -42,7 +43,7 @@ const getDefaultScheduleValue = () => {
   return nextHour.toISOString().slice(0, 16);
 };
 
-const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) => {
+const ImprovisationConfigStep = ({ onComplete, onBack }: ImprovisationConfigStepProps) => {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState<string | null>(null);
@@ -214,6 +215,12 @@ const ImprovisationConfigStep = ({ onComplete }: ImprovisationConfigStepProps) =
           className="btn-primary w-full"
         >
           CONTINUAR
+        </button>
+        <button
+          onClick={onBack}
+          className="mt-3 w-full rounded-lg border border-border bg-white/80 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-secondary hover:text-secondary"
+        >
+          VOLVER
         </button>
       </div>
     </div>

@@ -2,9 +2,10 @@ import { useState } from "react";
 
 interface TermsStepProps {
   onComplete: () => void;
+  onBack: () => void;
 }
 
-const TermsStep = ({ onComplete }: TermsStepProps) => {
+const TermsStep = ({ onComplete, onBack }: TermsStepProps) => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedData, setAcceptedData] = useState(false);
 
@@ -65,6 +66,12 @@ const TermsStep = ({ onComplete }: TermsStepProps) => {
           className="btn-primary w-full mt-8"
         >
           CONTINUAR
+        </button>
+        <button
+          onClick={onBack}
+          className="mt-3 w-full rounded-lg border border-border bg-white/80 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-secondary hover:text-secondary"
+        >
+          VOLVER
         </button>
       </div>
     </div>
