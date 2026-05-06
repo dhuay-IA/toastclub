@@ -58,13 +58,22 @@ export const listUsersForAdminReport = async () => {
 
   const usersWithSessionCounts = await Promise.all(
     users.map(async (user) => {
-      const [sessionRows] = await pool.execute(
-        `SELECT COUNT(*) AS total_sessions,
-                MAX(created_at) AS last_session_at
-         FROM vr_sessions
-         WHERE user_id = ?`,
-        [user.id]
-      );
+      let sessionRows = [];
+
+      try {
+        [sessionRows] = await pool.execute(
+          `SELECT COUNT(*) AS total_sessions,
+                  MAX(created_at) AS last_session_at
+           FROM vr_sessions
+           WHERE user_id = ?`,
+          [user.id]
+        );
+      } catch (error) {
+        console.warn(
+          `Admin user session summary fallback for ${user.email}:`,
+          error?.message || error
+        );
+      }
 
       const summary = sessionRows[0] ?? {};
 

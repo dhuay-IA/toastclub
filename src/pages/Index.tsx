@@ -125,6 +125,7 @@ const Index = () => {
   const [adminReportMetrics, setAdminReportMetrics] = useState<AdminReportMetrics | null>(null);
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportError, setAdminReportError] = useState("");
+  const [adminReportRefreshKey, setAdminReportRefreshKey] = useState(0);
 
   const mapApiSessionToRecord = useCallback(
     (session: {
@@ -354,7 +355,7 @@ const Index = () => {
     return () => {
       cancelled = true;
     };
-  }, [authToken, currentStep, userRole]);
+  }, [adminReportRefreshKey, authToken, currentStep, userRole]);
 
   const selectedSession = useMemo(
     () => sessionHistory.find((session) => session.id === selectedSessionId) ?? null,
@@ -733,6 +734,7 @@ const Index = () => {
             isLoading={adminReportLoading}
             error={adminReportError}
             dataSourceLabel="base real"
+            onRefresh={() => setAdminReportRefreshKey((key) => key + 1)}
             onBack={() => setCurrentStep("dashboard")}
             onLogout={handleLogout}
           />

@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   MonitorPlay,
   Presentation,
+  RefreshCw,
   XCircle,
 } from "lucide-react";
 import type { SessionSummary } from "@/components/DashboardStep";
@@ -29,6 +30,7 @@ type AdminReportStepProps = {
   isLoading?: boolean;
   error?: string;
   dataSourceLabel?: string;
+  onRefresh: () => void;
   onBack: () => void;
   onLogout: () => void;
 };
@@ -128,6 +130,7 @@ const AdminReportStep = ({
   isLoading = false,
   error = "",
   dataSourceLabel = "servidor",
+  onRefresh,
   onBack,
   onLogout,
 }: AdminReportStepProps) => {
@@ -192,13 +195,23 @@ const AdminReportStep = ({
                 </p>
               </div>
 
-              <button
-                onClick={() => downloadCsv(users, sessions)}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/15"
-              >
-                <Download className="h-4 w-4" />
-                Descargar CSV
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  onClick={onRefresh}
+                  disabled={isLoading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/15 disabled:pointer-events-none disabled:opacity-60"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+                  Actualizar
+                </button>
+                <button
+                  onClick={() => downloadCsv(users, sessions)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/15"
+                >
+                  <Download className="h-4 w-4" />
+                  Descargar CSV
+                </button>
+              </div>
             </div>
           </div>
 

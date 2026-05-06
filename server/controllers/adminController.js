@@ -17,9 +17,18 @@ const parseJsonColumn = (value) => {
 
 export const getAdminReport = async (req, res) => {
   const users = await listUsersForAdminReport();
-  const sessions = await listAdminReportSessions({
-    limit: Number(req.query.limit || 100),
-  });
+  let sessions = [];
+  let sessionsError = "";
+
+  try {
+    sessions = await listAdminReportSessions({
+      limit: Number(req.query.limit || 100),
+    });
+  } catch (error) {
+    sessionsError = error?.message || "No se pudieron cargar las sesiones.";
+    console.warn("Admin sessions fallback:", sessionsError);
+  }
+
   const studentIds = users.map((user) => user.id);
   let metrics = buildAdminMetricsFromRecentSessions(sessions);
   let metricsIsFallback = true;
@@ -50,6 +59,7 @@ export const getAdminReport = async (req, res) => {
         },
       },
       metricsIsFallback,
+      sessionsError,
       users: users.map((user) => ({
         id: user.id,
         email: user.email,
