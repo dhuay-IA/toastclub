@@ -17,10 +17,11 @@ const buildStudentFilter = (studentIds) => {
 export const listAdminReportSessions = async ({ limit = 100 }) => {
   const boundedLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 100;
   const [rows] = await pool.execute(
-    `SELECT s.id,
+     `SELECT s.id,
             s.user_id,
             u.email,
             u.name,
+            s.session_code,
             s.vr_app,
             s.scenario_key,
             s.status,

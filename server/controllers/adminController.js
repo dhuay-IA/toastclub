@@ -71,6 +71,7 @@ export const getAdminReport = async (req, res) => {
       })),
       sessions: sessions.map((session) => ({
         id: String(session.id),
+        sessionCode: session.session_code,
         email: session.email,
         name: session.name,
         mode: session.vr_app === "presentation" ? "presentation" : "improvisation",
