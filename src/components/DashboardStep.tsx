@@ -173,8 +173,8 @@ const DashboardStep = ({
               </div>
             </div>
 
-            <div className="grid gap-5 px-8 py-7 md:grid-cols-[1.2fr_0.8fr] lg:px-10">
-              <div className="rounded-2xl border border-border/70 bg-white/75 p-6">
+            <div className="grid gap-5 px-8 py-7 lg:grid-cols-3 lg:px-10">
+              <div className="rounded-2xl border border-border/70 bg-white/75 p-6 lg:col-span-2">
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
                   Reporte operativo
                 </p>
@@ -212,6 +212,55 @@ const DashboardStep = ({
                     Cerrar sesion
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <div className="grid gap-5 border-t border-border/60 px-8 py-7 md:grid-cols-3 lg:px-10">
+              {modeCards.map((card) => (
+                <button
+                  key={card.mode}
+                  onClick={() => onSelectMode(card.mode)}
+                  className="group flex h-full flex-col rounded-2xl border border-border/70 bg-white/75 text-left transition-colors hover:border-secondary/50"
+                >
+                  <div className={`rounded-t-2xl bg-gradient-to-br ${card.accent} px-5 py-5`}>
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/85 text-primary shadow-sm transition-transform duration-200 group-hover:scale-105">
+                      <card.icon className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <div className="flex flex-1 flex-col p-5">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      Crear sesion
+                    </p>
+                    <h3 className="mt-2 text-base font-semibold text-foreground">
+                      {card.title}
+                    </h3>
+                    <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                      {card.description}
+                    </p>
+                    <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-secondary">
+                      Empezar
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+                    </span>
+                  </div>
+                </button>
+              ))}
+
+              <div className="flex h-full flex-col rounded-2xl border border-dashed border-border/80 bg-white/60 p-5">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                  <Mic2 className="h-5 w-5" />
+                </div>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Agents
+                </p>
+                <h3 className="mt-2 text-base font-semibold text-foreground">
+                  Modulo pendiente
+                </h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                  Aqui quedara el acceso para encargados/equipos cuando activemos ese flujo.
+                </p>
+                <span className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                  Aun no habilitado
+                </span>
               </div>
             </div>
           </section>
