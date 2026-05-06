@@ -126,6 +126,7 @@ const Index = () => {
   const [adminReportLoading, setAdminReportLoading] = useState(false);
   const [adminReportError, setAdminReportError] = useState("");
   const [adminReportRefreshKey, setAdminReportRefreshKey] = useState(0);
+  const [selectedAdminStudentId, setSelectedAdminStudentId] = useState("");
 
   const mapApiSessionToRecord = useCallback(
     (session: {
@@ -303,7 +304,11 @@ const Index = () => {
   }, [authToken]);
 
   useEffect(() => {
-    if (currentStep !== "admin-report" || userRole !== "admin" || !authToken) {
+    if (
+      userRole !== "admin" ||
+      !authToken ||
+      (currentStep !== "admin-report" && currentStep !== "dashboard")
+    ) {
       return;
     }
 
@@ -341,7 +346,11 @@ const Index = () => {
         | undefined;
 
       setAdminReportMetrics(report?.metrics ?? null);
-      setAdminReportUsers(report?.users ?? []);
+      const reportUsers = report?.users ?? [];
+      setAdminReportUsers(reportUsers);
+      setSelectedAdminStudentId((current) =>
+        current || String(reportUsers[0]?.id ?? "")
+      );
       setAdminReportSessions(
         (report?.sessions ?? []).map((session) => ({
           ...session,
@@ -478,8 +487,16 @@ const Index = () => {
 
   const handleDifficulty = async (selectedDifficulty: "easy" | "medium" | "hard") => {
     setDifficulty(selectedDifficulty);
+
+    if (userRole === "admin" && !selectedAdminStudentId) {
+      window.alert("Selecciona un student antes de crear la sesion.");
+      setCurrentStep("dashboard");
+      return;
+    }
+
     const creation = await createPracticeSession({
       token: authToken || undefined,
+      targetUserId: userRole === "admin" ? selectedAdminStudentId : undefined,
       mode,
       difficulty: selectedDifficulty,
       fileName,
@@ -524,7 +541,9 @@ const Index = () => {
       duration,
     };
 
-    if (authToken) {
+    const isAdminAssignedSession = userRole === "admin" && Boolean(selectedAdminStudentId);
+
+    if (authToken && !isAdminAssignedSession) {
       setSessionHistory((current) =>
         [newSession, ...current].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
@@ -535,6 +554,8 @@ const Index = () => {
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         )
       );
+    } else if (authToken && isAdminAssignedSession) {
+      setAdminReportRefreshKey((key) => key + 1);
     } else {
       const stored = localStorage.getItem(SESSION_HISTORY_KEY);
       const parsed = stored ? (JSON.parse(stored) as SessionRecord[]) : [];
@@ -642,6 +663,7 @@ const Index = () => {
     setAdminReportSessions([]);
     setAdminReportMetrics(null);
     setAdminReportError("");
+    setSelectedAdminStudentId("");
     setOtpResendCount(0);
     setSelectedSessionId(null);
     setCurrentStep("login");
@@ -723,6 +745,9 @@ const Index = () => {
             sessionSummary={sessionHistory[0] ?? null}
             sessionHistory={sessionHistory}
             isAdmin={isCurrentUserAdmin}
+            adminUsers={adminUsers}
+            selectedAdminStudentId={selectedAdminStudentId}
+            onSelectAdminStudent={setSelectedAdminStudentId}
           />
         )}
         {currentStep === "admin-report" && isCurrentUserAdmin && (

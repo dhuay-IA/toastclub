@@ -10,6 +10,7 @@ const createLocalSessionCode = () =>
 
 export async function createPracticeSession(params: {
   token?: string;
+  targetUserId?: number | string;
   mode: SessionMode;
   difficulty: SessionDifficulty;
   fileName?: string;
@@ -25,6 +26,7 @@ export async function createPracticeSession(params: {
 }) {
   const {
     token,
+    targetUserId,
     mode,
     difficulty,
     fileName,
@@ -56,6 +58,7 @@ export async function createPracticeSession(params: {
     mode === "presentation" ? "presentation-upload" : "improvisation-teleprompter";
 
   const res = await createVrSession(token, {
+    targetUserId,
     vrApp: mode,
     scenarioKey,
     metadata: {

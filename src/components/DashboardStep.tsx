@@ -41,6 +41,13 @@ export type SessionSummary = {
   duration?: number;
 };
 
+export type AdminStudentOption = {
+  id?: number;
+  email: string;
+  name: string;
+  totalSessions?: number;
+};
+
 interface DashboardStepProps {
   userName: string;
   onSelectMode: (mode: "improvisation" | "presentation") => void;
@@ -51,6 +58,9 @@ interface DashboardStepProps {
   sessionSummary?: SessionSummary | null;
   sessionHistory: SessionSummary[];
   isAdmin?: boolean;
+  adminUsers?: AdminStudentOption[];
+  selectedAdminStudentId?: string;
+  onSelectAdminStudent?: (studentId: string) => void;
 }
 
 const difficultyLabels = {
@@ -110,6 +120,9 @@ const DashboardStep = ({
   sessionSummary,
   sessionHistory,
   isAdmin = false,
+  adminUsers = [],
+  selectedAdminStudentId = "",
+  onSelectAdminStudent,
 }: DashboardStepProps) => {
   const activeSessions = sessionHistory.filter(
     (session) => session.status !== "canceled"
@@ -145,6 +158,10 @@ const DashboardStep = ({
       | undefined) ?? "medium";
   const feedbackPercent = getPercent(feedbackCount, activeSessions.length);
   const audioPercent = getPercent(audioCount, activeSessions.length);
+  const selectedAdminStudent = adminUsers.find(
+    (user) => String(user.id ?? "") === selectedAdminStudentId
+  );
+  const canCreateAdminSession = !isAdmin || Boolean(selectedAdminStudentId);
 
   if (isAdmin && onOpenAdminReport) {
     return (
@@ -185,6 +202,26 @@ const DashboardStep = ({
                   Consulta la informacion consolidada de alumnos y practicas sin
                   entrar al flujo de estudiante.
                 </p>
+                <div className="mt-5 rounded-xl border border-border/70 bg-white/80 p-4">
+                  <label className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    Crear sesion para student
+                  </label>
+                  <select
+                    value={selectedAdminStudentId}
+                    onChange={(event) => onSelectAdminStudent?.(event.target.value)}
+                    className="mt-3 w-full rounded-lg border border-border bg-white px-3 py-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+                  >
+                    <option value="">Selecciona un alumno registrado</option>
+                    {adminUsers.map((student) => (
+                      <option key={student.id ?? student.email} value={String(student.id ?? "")}>
+                        {student.name} - {student.email}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    La sesion quedara guardada en el registro del student seleccionado.
+                  </p>
+                </div>
                 <button
                   onClick={onOpenAdminReport}
                   className="mt-5 inline-flex items-center gap-2 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
@@ -219,8 +256,9 @@ const DashboardStep = ({
               {modeCards.map((card) => (
                 <button
                   key={card.mode}
+                  disabled={!canCreateAdminSession}
                   onClick={() => onSelectMode(card.mode)}
-                  className="group flex h-full flex-col rounded-2xl border border-border/70 bg-white/75 text-left transition-colors hover:border-secondary/50"
+                  className="group flex h-full flex-col rounded-2xl border border-border/70 bg-white/75 text-left transition-colors hover:border-secondary/50 disabled:pointer-events-none disabled:opacity-50"
                 >
                   <div className={`rounded-t-2xl bg-gradient-to-br ${card.accent} px-5 py-5`}>
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/85 text-primary shadow-sm transition-transform duration-200 group-hover:scale-105">
@@ -237,6 +275,15 @@ const DashboardStep = ({
                     <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
                       {card.description}
                     </p>
+                    {selectedAdminStudent ? (
+                      <p className="mt-3 rounded-lg bg-muted/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                        Para: {selectedAdminStudent.name}
+                      </p>
+                    ) : (
+                      <p className="mt-3 rounded-lg bg-muted/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                        Selecciona un student primero
+                      </p>
+                    )}
                     <span className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-secondary">
                       Empezar
                       <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1" />
@@ -535,6 +582,11 @@ const DashboardStep = ({
             {sessionSummary ? (
               <div className="mt-4 space-y-4">
                 <div className="rounded-2xl border border-border/70 bg-white/75 p-4">
+                  {sessionSummary.sessionCode ? (
+                    <p className="mb-2 inline-flex rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                      Codigo {sessionSummary.sessionCode}
+                    </p>
+                  ) : null}
                   <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
                     {sessionSummary.mode === "improvisation" ? "Improvisacion" : "Presentacion"}
                   </p>
@@ -630,6 +682,11 @@ const DashboardStep = ({
                   key={session.id}
                   className="flex h-full flex-col rounded-2xl border border-border/70 bg-white/75 p-5"
                 >
+                  {session.sessionCode ? (
+                    <p className="mb-3 inline-flex w-fit rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                      Codigo {session.sessionCode}
+                    </p>
+                  ) : null}
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-foreground">

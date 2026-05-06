@@ -340,6 +340,7 @@ export function getVrSessions(token: string) {
 export function createVrSession(
   token: string,
   payload: {
+    targetUserId?: number | string;
     vrApp: "presentation" | "improvisation";
     scenarioKey: string;
     metadata: {

@@ -9,6 +9,7 @@ import {
   listVrSessionsByUser,
   saveVrSessionFeedback,
 } from "../models/vrSessionModel.js";
+import { findUserById } from "../models/userModel.js";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -123,7 +124,7 @@ export const getVrAccess = async (req, res) => {
 };
 
 export const startVrSession = async (req, res) => {
-  const { vrApp, scenarioKey, metadata } = req.body;
+  const { vrApp, scenarioKey, metadata, targetUserId } = req.body;
 
   if (!vrApp || !scenarioKey) {
     return res.status(400).json({
@@ -132,11 +133,50 @@ export const startVrSession = async (req, res) => {
     });
   }
 
+  let sessionUserId = req.user.id;
+
+  if (req.user.role === "admin" && !targetUserId) {
+    return res.status(400).json({
+      success: false,
+      message: "Selecciona un estudiante para crear la sesion desde admin.",
+    });
+  }
+
+  if (req.user.role === "admin" && targetUserId) {
+    const numericTargetUserId = Number(targetUserId);
+
+    if (!Number.isInteger(numericTargetUserId) || numericTargetUserId <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Selecciona un estudiante valido para crear la sesion.",
+      });
+    }
+
+    const targetUser = await findUserById(numericTargetUserId);
+
+    if (!targetUser || targetUser.role === "admin") {
+      return res.status(404).json({
+        success: false,
+        message: "No se encontro un estudiante valido para asignar la sesion.",
+      });
+    }
+
+    sessionUserId = targetUser.id;
+  }
+
+  const sessionMetadata =
+    req.user.role === "admin" && sessionUserId !== req.user.id
+      ? {
+          ...(metadata ?? {}),
+          assignedByAdminId: req.user.id,
+        }
+      : metadata ?? null;
+
   const session = await createVrSession({
-    userId: req.user.id,
+    userId: sessionUserId,
     vrApp: String(vrApp).trim(),
     scenarioKey: String(scenarioKey).trim(),
-    metadata: metadata ?? null,
+    metadata: sessionMetadata,
   });
 
   return res.status(201).json({
