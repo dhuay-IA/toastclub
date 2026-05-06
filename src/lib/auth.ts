@@ -304,6 +304,46 @@ export function getAdminReport(token: string) {
   }>("/api/admin/report", token);
 }
 
+export function getAdminUserSessions(token: string, userId: number | string) {
+  return getFromApi<
+    Array<{
+      id: string;
+      userId: number;
+      sessionCode: string;
+      email: string;
+      name: string;
+      mode: "improvisation" | "presentation";
+      difficulty: "easy" | "medium" | "hard";
+      scheduledAt?: string;
+      createdAt: string;
+      status?: "active" | "completed" | "canceled";
+      audioUrl?: string | null;
+      videoUrl?: string | null;
+      metadata?: {
+        difficulty?: "easy" | "medium" | "hard";
+        duration?: number;
+        totalMinutes?: number;
+        fileName?: string;
+        slideCount?: number;
+        slideImages?: string[];
+        textTitle?: string;
+        promptWord?: string;
+        textPrompt?: string;
+        selectedTags?: string[];
+        scheduledAt?: string;
+      } | null;
+      result?: {
+        feedback?: {
+          confidence: string;
+          audienceReaction: string;
+          improvement: string;
+          notes: string;
+        };
+      } | null;
+    }>
+  >(`/api/admin/users/${userId}/sessions`, token);
+}
+
 export function getVrSessions(token: string) {
   return getFromApi<
     Array<{

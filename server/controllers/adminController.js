@@ -3,7 +3,8 @@ import {
   getAdminReportMetrics,
   listAdminReportSessions,
 } from "../models/adminModel.js";
-import { listUsersForAdminReport } from "../models/userModel.js";
+import { listVrSessionsByUser } from "../models/vrSessionModel.js";
+import { findUserById, listUsersForAdminReport } from "../models/userModel.js";
 
 const parseJsonColumn = (value) => {
   if (!value) return null;
@@ -14,6 +15,30 @@ const parseJsonColumn = (value) => {
   } catch {
     return null;
   }
+};
+
+const serializeAdminSession = (session) => {
+  const metadata = parseJsonColumn(session.metadata_json);
+
+  return {
+    id: String(session.id),
+    userId: session.user_id,
+    sessionCode: session.session_code,
+    email: session.email,
+    name: session.name,
+    mode: session.vr_app === "presentation" ? "presentation" : "improvisation",
+    difficulty: metadata?.difficulty ?? "medium",
+    createdAt: session.created_at,
+    startedAt: session.started_at,
+    endedAt: session.ended_at,
+    status: session.status,
+    scenarioKey: session.scenario_key,
+    audioUrl: session.video_url,
+    videoUrl: session.video_url,
+    scheduledAt: metadata?.scheduledAt,
+    metadata,
+    result: parseJsonColumn(session.result_json),
+  };
 };
 
 export const getAdminReport = async (req, res) => {
@@ -70,25 +95,40 @@ export const getAdminReport = async (req, res) => {
         lastSeenAt: user.last_session_at ?? user.updated_at,
         totalSessions: Number(user.total_sessions ?? 0),
       })),
-      sessions: sessions.map((session) => ({
-        id: String(session.id),
-        userId: session.user_id,
-        sessionCode: session.session_code,
-        email: session.email,
-        name: session.name,
-        mode: session.vr_app === "presentation" ? "presentation" : "improvisation",
-        difficulty: parseJsonColumn(session.metadata_json)?.difficulty ?? "medium",
-        createdAt: session.created_at,
-        startedAt: session.started_at,
-        endedAt: session.ended_at,
-        status: session.status,
-        scenarioKey: session.scenario_key,
-        audioUrl: session.video_url,
-        videoUrl: session.video_url,
-        scheduledAt: parseJsonColumn(session.metadata_json)?.scheduledAt,
-        metadata: parseJsonColumn(session.metadata_json),
-        result: parseJsonColumn(session.result_json),
-      })),
+      sessions: sessions.map(serializeAdminSession),
     },
+  });
+};
+
+export const getAdminUserSessions = async (req, res) => {
+  const userId = Number(req.params.userId);
+
+  if (!Number.isInteger(userId) || userId <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "El alumno seleccionado no es valido.",
+    });
+  }
+
+  const user = await findUserById(userId);
+
+  if (!user || user.role === "admin") {
+    return res.status(404).json({
+      success: false,
+      message: "No se encontro un alumno valido.",
+    });
+  }
+
+  const sessions = await listVrSessionsByUser({ userId, limit: 100 });
+
+  return res.status(200).json({
+    success: true,
+    data: sessions.map((session) =>
+      serializeAdminSession({
+        ...session,
+        email: user.email,
+        name: user.name,
+      })
+    ),
   });
 };

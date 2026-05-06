@@ -31,6 +31,9 @@ type AdminReportStepProps = {
   isLoading?: boolean;
   error?: string;
   dataSourceLabel?: string;
+  onLoadUserSessions?: (
+    userId: number
+  ) => Promise<Array<SessionSummary & { userId?: number; email: string; name?: string }>>;
   onRefresh: () => void;
   onBack: () => void;
   onLogout: () => void;
@@ -142,11 +145,17 @@ const AdminReportStep = ({
   isLoading = false,
   error = "",
   dataSourceLabel = "servidor",
+  onLoadUserSessions,
   onRefresh,
   onBack,
   onLogout,
 }: AdminReportStepProps) => {
   const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(null);
+  const [loadedUserSessions, setLoadedUserSessions] = useState<
+    Array<SessionSummary & { userId?: number; email: string; name?: string }>
+  >([]);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState("");
   const totalStudents = metrics?.totalStudents ?? users.length;
   const totalSessions = metrics?.totalSessions ?? sessions.length;
   const improvSessions =
@@ -209,6 +218,32 @@ const AdminReportStep = ({
         : [],
     [selectedUser, selectedUserEmailNormalized, selectedUserId, sessions]
   );
+  const detailSessions = loadedUserSessions.length > 0 ? loadedUserSessions : selectedUserSessions;
+
+  const openUserSessions = async (user: AdminUserRecord) => {
+    setSelectedUserEmail(user.email);
+    setLoadedUserSessions([]);
+    setDetailError("");
+
+    if (!user.id || !onLoadUserSessions) {
+      return;
+    }
+
+    setIsDetailLoading(true);
+
+    try {
+      const userSessions = await onLoadUserSessions(user.id);
+      setLoadedUserSessions(userSessions);
+    } catch (loadError) {
+      setDetailError(
+        loadError instanceof Error
+          ? loadError.message
+          : "No se pudieron cargar las sesiones del alumno."
+      );
+    } finally {
+      setIsDetailLoading(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
@@ -422,7 +457,7 @@ const AdminReportStep = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => setSelectedUserEmail(user.email)}
+                        onClick={() => void openUserSessions(user)}
                         className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
                         title="Ver detalle de sesiones"
                       >
@@ -574,7 +609,11 @@ const AdminReportStep = ({
               </div>
               <button
                 type="button"
-                onClick={() => setSelectedUserEmail(null)}
+                onClick={() => {
+                  setSelectedUserEmail(null);
+                  setLoadedUserSessions([]);
+                  setDetailError("");
+                }}
                 className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
               >
                 Cerrar
@@ -582,9 +621,15 @@ const AdminReportStep = ({
             </div>
 
             <div className="max-h-[64vh] overflow-y-auto px-6 py-5">
-              {selectedUserSessions.length > 0 ? (
+              {isDetailLoading ? (
+                <div className="rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Cargando sesiones del alumno...
+                  </p>
+                </div>
+              ) : detailSessions.length > 0 ? (
                 <div className="space-y-3">
-                  {selectedUserSessions.map((session) => (
+                  {detailSessions.map((session) => (
                     <article
                       key={session.id}
                       className="rounded-2xl border border-border/70 bg-white/80 p-5"
@@ -649,7 +694,7 @@ const AdminReportStep = ({
               ) : (
                 <div className="rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    Este alumno aun no tiene sesiones para mostrar.
+                    {detailError || "Este alumno aun no tiene sesiones para mostrar."}
                   </p>
                 </div>
               )}

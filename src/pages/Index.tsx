@@ -17,6 +17,7 @@ import StepTimeline from "@/components/StepTimeline";
 import {
   cancelVrSession,
   getAdminReport,
+  getAdminUserSessions,
   getProfile,
   getVrSessions,
   saveVrSessionFeedback,
@@ -671,6 +672,29 @@ const Index = () => {
     setCurrentStep("login");
   };
 
+  const handleLoadAdminUserSessions = async (userId: number) => {
+    if (!authToken) {
+      throw new Error("No hay sesion de administrador activa.");
+    }
+
+    const res = await getAdminUserSessions(authToken, userId);
+
+    if (!res.success) {
+      throw new Error(res.message || "No se pudieron cargar las sesiones del alumno.");
+    }
+
+    return ((res.data as Array<
+      SessionRecord & {
+        metadata?: { scheduledAt?: string } | null;
+        result?: { feedback?: SessionFeedback } | null;
+      }
+    >) ?? []).map((session) => ({
+      ...session,
+      scheduledAt: session.scheduledAt ?? session.metadata?.scheduledAt,
+      feedback: session.feedback ?? session.result?.feedback,
+    }));
+  };
+
   const adminUsers = adminReportUsers;
   const isCurrentUserAdmin = userRole === "admin";
   const adminSessions = adminReportSessions;
@@ -758,6 +782,7 @@ const Index = () => {
             isLoading={adminReportLoading}
             error={adminReportError}
             dataSourceLabel="base real"
+            onLoadUserSessions={handleLoadAdminUserSessions}
             onRefresh={() => setAdminReportRefreshKey((key) => key + 1)}
             onBack={() => setCurrentStep("dashboard")}
             onLogout={handleLogout}
