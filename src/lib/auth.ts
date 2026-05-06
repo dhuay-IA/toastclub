@@ -281,6 +281,7 @@ export function getAdminReport(token: string) {
     }>;
     sessions: Array<{
       id: string;
+      userId: number;
       email: string;
       name: string;
       mode: "improvisation" | "presentation";

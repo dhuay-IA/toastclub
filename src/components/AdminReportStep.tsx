@@ -26,7 +26,7 @@ type AdminUserRecord = {
 type AdminReportStepProps = {
   adminName: string;
   users: AdminUserRecord[];
-  sessions: Array<SessionSummary & { email: string; name?: string }>;
+  sessions: Array<SessionSummary & { userId?: number; email: string; name?: string }>;
   metrics?: AdminReportMetrics | null;
   isLoading?: boolean;
   error?: string;
@@ -67,7 +67,10 @@ const difficultyLabels = {
 
 const csvEscape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
 
-const downloadCsv = (users: AdminUserRecord[], sessions: Array<SessionSummary & { email: string; name?: string }>) => {
+const downloadCsv = (
+  users: AdminUserRecord[],
+  sessions: Array<SessionSummary & { userId?: number; email: string; name?: string }>
+) => {
   const sessionsByUser = new Map<string, number>();
 
   sessions.forEach((session) => {
@@ -185,17 +188,26 @@ const AdminReportStep = ({
     }))
     .sort((a, b) => b.totalSessions - a.totalSessions || b.lastSeenAt.localeCompare(a.lastSeenAt));
   const selectedUser = topUsers.find((user) => user.email === selectedUserEmail) ?? null;
+  const selectedUserId = selectedUser?.id ? String(selectedUser.id) : "";
+  const selectedUserEmailNormalized = selectedUser?.email.trim().toLowerCase() ?? "";
   const selectedUserSessions = useMemo(
     () =>
-      selectedUserEmail
+      selectedUser
         ? sessions
-            .filter((session) => session.email === selectedUserEmail)
+            .filter((session) => {
+              const sessionUserId = session.userId ? String(session.userId) : "";
+              const sessionEmail = session.email.trim().toLowerCase();
+
+              return selectedUserId
+                ? sessionUserId === selectedUserId
+                : sessionEmail === selectedUserEmailNormalized;
+            })
             .sort(
               (a, b) =>
                 new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
             )
         : [],
-    [selectedUserEmail, sessions]
+    [selectedUser, selectedUserEmailNormalized, selectedUserId, sessions]
   );
 
   return (

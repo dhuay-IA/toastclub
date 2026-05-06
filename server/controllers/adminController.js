@@ -72,6 +72,7 @@ export const getAdminReport = async (req, res) => {
       })),
       sessions: sessions.map((session) => ({
         id: String(session.id),
+        userId: session.user_id,
         sessionCode: session.session_code,
         email: session.email,
         name: session.name,

@@ -37,6 +37,7 @@ type FlowStep =
   | "ready";
 
 type SessionRecord = SessionSummary & {
+  userId?: number;
   email: string;
 };
 
@@ -338,6 +339,7 @@ const Index = () => {
             users?: UserAccessRecord[];
             sessions?: Array<
               SessionRecord & {
+                userId?: number;
                 metadata?: { scheduledAt?: string } | null;
                 result?: { feedback?: SessionFeedback } | null;
               }
