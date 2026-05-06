@@ -29,6 +29,20 @@ const addColumnIfMissing = async (tableName, columnName, definition) => {
   await pool.query(`ALTER TABLE ${tableName} ADD COLUMN ${definition}`);
 };
 
+const addIndexIfMissing = async (tableName, indexName, definition) => {
+  const [indexes] = await pool.query(
+    `SHOW INDEX FROM ${tableName}
+     WHERE Key_name = ?`,
+    [indexName]
+  );
+
+  if (Array.isArray(indexes) && indexes.length > 0) {
+    return;
+  }
+
+  await pool.query(`ALTER TABLE ${tableName} ADD INDEX ${indexName} ${definition}`);
+};
+
 const initializeDatabase = async () => {
   const schemaPath = path.resolve("server/models/schema.sql");
   const schema = await fs.readFile(schemaPath, "utf8");
@@ -116,6 +130,13 @@ const initializeDatabase = async () => {
     ALTER TABLE vr_sessions
     MODIFY COLUMN status ENUM('active', 'completed', 'canceled') NOT NULL DEFAULT 'active'
   `);
+
+  await addIndexIfMissing("users", "users_role_id_idx", "(role, id)");
+  await addIndexIfMissing(
+    "vr_sessions",
+    "vr_sessions_user_created_idx",
+    "(user_id, created_at)"
+  );
 
   const configuredAdmins = (process.env.ADMIN_EMAILS || "")
     .split(",")

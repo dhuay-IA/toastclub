@@ -49,23 +49,45 @@ export const updateUserRole = async ({ userId, role }) => {
 };
 
 export const listUsersForAdminReport = async () => {
-  const [rows] = await pool.execute(
-    `SELECT u.id,
-            u.email,
-            u.name,
-            u.role,
-            u.created_at,
-            u.updated_at,
-            COUNT(s.id) AS total_sessions,
-            MAX(s.created_at) AS last_session_at
-     FROM users u
-     LEFT JOIN vr_sessions s ON s.user_id = u.id
-     WHERE u.role <> 'admin'
-     GROUP BY u.id, u.email, u.name, u.role, u.created_at, u.updated_at
-     ORDER BY COALESCE(MAX(s.created_at), u.updated_at) DESC, u.created_at DESC`
+  const [users] = await pool.execute(
+    `SELECT id, email, name, role, created_at, updated_at
+     FROM users
+     WHERE role <> 'admin'
+     ORDER BY id DESC`
   );
 
-  return rows;
+  const [sessionTotals] = await pool.execute(
+    `SELECT user_id,
+            COUNT(*) AS total_sessions,
+            MAX(created_at) AS last_session_at
+     FROM vr_sessions
+     GROUP BY user_id`
+  );
+
+  const totalsByUserId = new Map(
+    sessionTotals.map((row) => [
+      row.user_id,
+      {
+        totalSessions: Number(row.total_sessions ?? 0),
+        lastSessionAt: row.last_session_at,
+      },
+    ])
+  );
+
+  return users
+    .map((user) => {
+      const totals = totalsByUserId.get(user.id);
+      return {
+        ...user,
+        total_sessions: totals?.totalSessions ?? 0,
+        last_session_at: totals?.lastSessionAt ?? null,
+      };
+    })
+    .sort((a, b) => {
+      const aTime = new Date(a.last_session_at ?? a.updated_at).getTime();
+      const bTime = new Date(b.last_session_at ?? b.updated_at).getTime();
+      return bTime - aTime;
+    });
 };
 
 export const storeUserOtp = async ({ userId, otp, expiresAt }) => {

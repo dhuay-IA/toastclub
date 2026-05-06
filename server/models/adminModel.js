@@ -3,23 +3,40 @@ import pool from "../config/db.js";
 export const listAdminReportSessions = async ({ limit = 100 }) => {
   const boundedLimit = Number.isFinite(limit) ? Math.min(Math.max(limit, 1), 500) : 100;
   const [rows] = await pool.execute(
-    `SELECT s.id,
-            s.user_id,
+    `SELECT recent_sessions.id,
+            recent_sessions.user_id,
             u.email,
             u.name,
+            recent_sessions.vr_app,
+            recent_sessions.scenario_key,
+            recent_sessions.status,
+            recent_sessions.metadata_json,
+            recent_sessions.result_json,
+            recent_sessions.video_url,
+            recent_sessions.started_at,
+            recent_sessions.ended_at,
+            recent_sessions.created_at,
+            recent_sessions.updated_at
+     FROM (
+       SELECT s.id,
+            s.user_id,
             s.vr_app,
             s.scenario_key,
             s.status,
             s.metadata_json,
             s.result_json,
+            s.video_url,
             s.started_at,
             s.ended_at,
             s.created_at,
             s.updated_at
-     FROM vr_sessions s
-     INNER JOIN users u ON u.id = s.user_id
+       FROM vr_sessions s
+       ORDER BY s.id DESC
+       LIMIT ${boundedLimit}
+     ) recent_sessions
+     INNER JOIN users u ON u.id = recent_sessions.user_id
      WHERE u.role <> 'admin'
-     ORDER BY s.created_at DESC
+     ORDER BY recent_sessions.id DESC
      LIMIT ${boundedLimit}`
   );
 

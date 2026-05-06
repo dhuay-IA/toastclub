@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY users_email_unique (email)
+  UNIQUE KEY users_email_unique (email),
+  KEY users_role_id_idx (role, id)
 );
 
 CREATE TABLE IF NOT EXISTS vr_sessions (
@@ -35,5 +36,6 @@ CREATE TABLE IF NOT EXISTS vr_sessions (
   PRIMARY KEY (id),
   UNIQUE KEY vr_sessions_session_code_unique (session_code),
   KEY vr_sessions_user_id_idx (user_id),
+  KEY vr_sessions_user_created_idx (user_id, created_at),
   CONSTRAINT vr_sessions_user_id_fk FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );

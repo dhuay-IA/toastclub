@@ -56,6 +56,8 @@ export const getAdminReport = async (req, res) => {
         endedAt: session.ended_at,
         status: session.status,
         scenarioKey: session.scenario_key,
+        audioUrl: session.video_url,
+        videoUrl: session.video_url,
         scheduledAt: parseJsonColumn(session.metadata_json)?.scheduledAt,
         metadata: parseJsonColumn(session.metadata_json),
         result: parseJsonColumn(session.result_json),
