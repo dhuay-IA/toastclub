@@ -14,6 +14,14 @@ interface PresentationConfigStepProps {
     scheduledAt: string;
   }) => void;
   onBack: () => void;
+  isAdmin?: boolean;
+  adminUsers?: Array<{
+    id?: number;
+    email: string;
+    name: string;
+  }>;
+  selectedAdminStudentId?: string;
+  onSelectAdminStudent?: (studentId: string) => void;
 }
 
 const getDefaultScheduleValue = () => {
@@ -22,7 +30,14 @@ const getDefaultScheduleValue = () => {
   return nextHour.toISOString().slice(0, 16);
 };
 
-const PresentationConfigStep = ({ onComplete, onBack }: PresentationConfigStepProps) => {
+const PresentationConfigStep = ({
+  onComplete,
+  onBack,
+  isAdmin = false,
+  adminUsers = [],
+  selectedAdminStudentId = "",
+  onSelectAdminStudent,
+}: PresentationConfigStepProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processed, setProcessed] = useState(false);
@@ -125,6 +140,29 @@ const PresentationConfigStep = ({ onComplete, onBack }: PresentationConfigStepPr
         <h2 className="mb-6 text-center text-lg font-semibold text-foreground">
           Sube tu presentacion
         </h2>
+
+        {isAdmin ? (
+          <div className="mb-6 rounded-xl border border-border/70 bg-white/80 p-4">
+            <label className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              Alumno para esta sesion
+            </label>
+            <select
+              value={selectedAdminStudentId}
+              onChange={(event) => onSelectAdminStudent?.(event.target.value)}
+              className="input-field"
+            >
+              <option value="">Selecciona un alumno registrado</option>
+              {adminUsers.map((student) => (
+                <option key={student.id ?? student.email} value={String(student.id ?? "")}>
+                  {student.name} - {student.email}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Esta presentacion aparecera en el registro del alumno elegido.
+            </p>
+          </div>
+        ) : null}
 
         <div className="mb-6">
           <input
@@ -258,7 +296,7 @@ const PresentationConfigStep = ({ onComplete, onBack }: PresentationConfigStepPr
 
         <button
           onClick={handleSubmit}
-          disabled={!processed || !scheduledAt}
+          disabled={!processed || !scheduledAt || (isAdmin && !selectedAdminStudentId)}
           className="btn-primary w-full"
         >
           CONTINUAR

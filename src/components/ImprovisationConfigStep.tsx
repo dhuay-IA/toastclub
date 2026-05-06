@@ -11,6 +11,14 @@ interface ImprovisationConfigStepProps {
     scheduledAt: string;
   }) => void;
   onBack: () => void;
+  isAdmin?: boolean;
+  adminUsers?: Array<{
+    id?: number;
+    email: string;
+    name: string;
+  }>;
+  selectedAdminStudentId?: string;
+  onSelectAdminStudent?: (studentId: string) => void;
 }
 
 const SAMPLE_TEXTS = [
@@ -43,7 +51,14 @@ const getDefaultScheduleValue = () => {
   return nextHour.toISOString().slice(0, 16);
 };
 
-const ImprovisationConfigStep = ({ onComplete, onBack }: ImprovisationConfigStepProps) => {
+const ImprovisationConfigStep = ({
+  onComplete,
+  onBack,
+  isAdmin = false,
+  adminUsers = [],
+  selectedAdminStudentId = "",
+  onSelectAdminStudent,
+}: ImprovisationConfigStepProps) => {
   const [search, setSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedText, setSelectedText] = useState<string | null>(null);
@@ -97,6 +112,29 @@ const ImprovisationConfigStep = ({ onComplete, onBack }: ImprovisationConfigStep
         <h2 className="text-lg font-semibold text-foreground mb-6 text-center">
           Selecciona un Texto
         </h2>
+
+        {isAdmin ? (
+          <div className="mb-6 rounded-xl border border-border/70 bg-white/80 p-4">
+            <label className="block text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+              Alumno para esta sesion
+            </label>
+            <select
+              value={selectedAdminStudentId}
+              onChange={(event) => onSelectAdminStudent?.(event.target.value)}
+              className="input-field"
+            >
+              <option value="">Selecciona un alumno registrado</option>
+              {adminUsers.map((student) => (
+                <option key={student.id ?? student.email} value={String(student.id ?? "")}>
+                  {student.name} - {student.email}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Esta improvisacion aparecera en el registro del alumno elegido.
+            </p>
+          </div>
+        ) : null}
 
         {/* Search */}
         <div className="mb-4">
@@ -211,7 +249,7 @@ const ImprovisationConfigStep = ({ onComplete, onBack }: ImprovisationConfigStep
 
         <button
           onClick={handleSubmit}
-          disabled={!selectedText || !scheduledAt}
+          disabled={!selectedText || !scheduledAt || (isAdmin && !selectedAdminStudentId)}
           className="btn-primary w-full"
         >
           CONTINUAR

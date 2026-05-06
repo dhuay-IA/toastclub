@@ -745,9 +745,6 @@ const Index = () => {
             sessionSummary={sessionHistory[0] ?? null}
             sessionHistory={sessionHistory}
             isAdmin={isCurrentUserAdmin}
-            adminUsers={adminUsers}
-            selectedAdminStudentId={selectedAdminStudentId}
-            onSelectAdminStudent={setSelectedAdminStudentId}
           />
         )}
         {currentStep === "admin-report" && isCurrentUserAdmin && (
@@ -775,12 +772,20 @@ const Index = () => {
           <ImprovisationConfigStep
             onComplete={handleImprovConfig}
             onBack={() => setCurrentStep("dashboard")}
+            isAdmin={isCurrentUserAdmin}
+            adminUsers={adminUsers}
+            selectedAdminStudentId={selectedAdminStudentId}
+            onSelectAdminStudent={setSelectedAdminStudentId}
           />
         )}
         {currentStep === "config-presentation" && (
           <PresentationConfigStep
             onComplete={handlePresentationConfig}
             onBack={() => setCurrentStep("dashboard")}
+            isAdmin={isCurrentUserAdmin}
+            adminUsers={adminUsers}
+            selectedAdminStudentId={selectedAdminStudentId}
+            onSelectAdminStudent={setSelectedAdminStudentId}
           />
         )}
         {currentStep === "difficulty" && (
