@@ -27,9 +27,9 @@ interface SessionFeedbackStepProps {
 }
 
 const difficultyLabels = {
-  easy: "Facil",
+  easy: "Fácil",
   medium: "Medio",
-  hard: "Dificil",
+  hard: "Difícil",
 };
 
 const emptyFeedback: SessionFeedback = {
@@ -42,23 +42,23 @@ const emptyFeedback: SessionFeedback = {
 const feedbackFields = [
   {
     key: "confidence" as const,
-    label: "¿Como evaluas tu nivel de confianza en esta sesion?",
-    placeholder: "Ejemplo: Me senti mas seguro despues del primer minuto.",
+    label: "¿Cómo evalúas tu nivel de confianza en esta sesión?",
+    placeholder: "Ejemplo: Me sentí más seguro después del primer minuto.",
   },
   {
     key: "audienceReaction" as const,
-    label: "¿Como percibiste la reaccion de la audiencia virtual?",
+    label: "¿Cómo percibiste la reacción de la audiencia virtual?",
     placeholder: "Ejemplo: Vi a la audiencia atenta, pero las preguntas me sacaron del ritmo.",
   },
   {
     key: "improvement" as const,
-    label: "¿Que aspecto quieres mejorar para la siguiente practica?",
-    placeholder: "Ejemplo: Mantener mejor el contacto visual y cerrar con mas claridad.",
+    label: "¿Qué aspecto quieres mejorar para la siguiente práctica?",
+    placeholder: "Ejemplo: Mantener mejor el contacto visual y cerrar con más claridad.",
   },
   {
     key: "notes" as const,
     label: "Notas adicionales",
-    placeholder: "Cualquier aprendizaje o recordatorio importante para la proxima sesion.",
+    placeholder: "Cualquier aprendizaje o recordatorio importante para la próxima sesión.",
   },
 ];
 
@@ -91,14 +91,14 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
         <section className="glass-card overflow-hidden">
           <div className="bg-gradient-to-r from-primary/95 via-primary to-secondary px-8 py-8 text-white">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/75">
-              Registro de sesion
+              Registro de sesión
             </p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">
-              Feedback de la sesion
+              Feedback de la sesión
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85">
-              Revisa el audio, responde el formulario y guarda observaciones utiles para
-              tu siguiente practica.
+              Revisa el audio, responde el formulario y guarda observaciones útiles para
+              tu siguiente práctica.
             </p>
           </div>
 
@@ -116,11 +116,11 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
                     className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-secondary hover:underline"
                   >
                     <Headphones className="h-4 w-4" />
-                    Ver audio de la sesion
+                    Ver audio de la sesión
                   </a>
                 ) : (
                   <p className="mt-3 text-sm text-muted-foreground">
-                    El audio aun no ha sido cargado para esta sesion.
+                    El audio aún no ha sido cargado para esta sesión.
                   </p>
                 )}
               </div>
@@ -136,7 +136,7 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
                   </p>
                   <p>
                     <span className="font-semibold text-foreground">Modo:</span>{" "}
-                    {session.mode === "improvisation" ? "Improvisacion" : "Presentacion"}
+                    {session.mode === "improvisation" ? "Improvisación" : "Presentación"}
                   </p>
                   <p>
                     <span className="font-semibold text-foreground">Dificultad:</span>{" "}
@@ -150,7 +150,7 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
                   </p>
                   {session.mode === "improvisation" && session.promptWord ? (
                     <p>
-                      <span className="font-semibold text-foreground">Palabra guia:</span>{" "}
+                      <span className="font-semibold text-foreground">Palabra guía:</span>{" "}
                       {session.promptWord}
                     </p>
                   ) : null}
