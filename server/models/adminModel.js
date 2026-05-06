@@ -127,7 +127,12 @@ export const buildAdminMetricsFromRecentSessions = (sessions) => {
     }
 
     try {
-      const metadata = session.metadata_json ? JSON.parse(session.metadata_json) : {};
+      const metadata =
+        typeof session.metadata_json === "object"
+          ? session.metadata_json ?? {}
+          : session.metadata_json
+            ? JSON.parse(session.metadata_json)
+            : {};
       if (metadata.difficulty === "easy") metrics.easy_sessions += 1;
       if (metadata.difficulty === "medium") metrics.medium_sessions += 1;
       if (metadata.difficulty === "hard") metrics.hard_sessions += 1;
@@ -136,7 +141,12 @@ export const buildAdminMetricsFromRecentSessions = (sessions) => {
     }
 
     try {
-      const result = session.result_json ? JSON.parse(session.result_json) : {};
+      const result =
+        typeof session.result_json === "object"
+          ? session.result_json ?? {}
+          : session.result_json
+            ? JSON.parse(session.result_json)
+            : {};
       if (result.feedback?.confidence) metrics.feedback_sessions += 1;
     } catch {
       // Ignore malformed result JSON in fallback metrics.

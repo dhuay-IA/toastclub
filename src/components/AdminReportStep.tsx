@@ -10,6 +10,7 @@ import {
   RefreshCw,
   XCircle,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import type { SessionSummary } from "@/components/DashboardStep";
 
 type AdminUserRecord = {
@@ -58,6 +59,11 @@ const formatDate = (value: string) =>
   }).format(new Date(value));
 
 const formatOptionalDate = (value?: string) => (value ? formatDate(value) : "Por confirmar");
+const difficultyLabels = {
+  easy: "Facil",
+  medium: "Medio",
+  hard: "Dificil",
+};
 
 const csvEscape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
 
@@ -137,6 +143,7 @@ const AdminReportStep = ({
   onBack,
   onLogout,
 }: AdminReportStepProps) => {
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(null);
   const totalStudents = metrics?.totalStudents ?? users.length;
   const totalSessions = metrics?.totalSessions ?? sessions.length;
   const improvSessions =
@@ -177,6 +184,19 @@ const AdminReportStep = ({
         user.totalSessions ?? sessions.filter((session) => session.email === user.email).length,
     }))
     .sort((a, b) => b.totalSessions - a.totalSessions || b.lastSeenAt.localeCompare(a.lastSeenAt));
+  const selectedUser = topUsers.find((user) => user.email === selectedUserEmail) ?? null;
+  const selectedUserSessions = useMemo(
+    () =>
+      selectedUserEmail
+        ? sessions
+            .filter((session) => session.email === selectedUserEmail)
+            .sort(
+              (a, b) =>
+                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            )
+        : [],
+    [selectedUserEmail, sessions]
+  );
 
   return (
     <div className="w-full max-w-6xl mx-auto px-6 py-10 lg:px-8">
@@ -388,9 +408,14 @@ const AdminReportStep = ({
                         <p className="text-sm font-semibold text-foreground">{user.name}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{user.email}</p>
                       </div>
-                      <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUserEmail(user.email)}
+                        className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground transition-colors hover:bg-secondary/10 hover:text-secondary"
+                        title="Ver detalle de sesiones"
+                      >
                         {user.totalSessions} sesiones
-                      </span>
+                      </button>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
                       Ultimo ingreso: {formatDate(user.lastSeenAt)}
@@ -519,6 +544,107 @@ const AdminReportStep = ({
           </aside>
         </section>
       </div>
+
+      {selectedUser ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 py-8">
+          <section className="max-h-[86vh] w-full max-w-3xl overflow-hidden rounded-2xl border border-border bg-white shadow-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-border/70 px-6 py-5">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Detalle de sesiones
+                </p>
+                <h3 className="mt-1 text-lg font-semibold text-foreground">
+                  {selectedUser.name}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {selectedUser.email}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedUserEmail(null)}
+                className="rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="max-h-[64vh] overflow-y-auto px-6 py-5">
+              {selectedUserSessions.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedUserSessions.map((session) => (
+                    <article
+                      key={session.id}
+                      className="rounded-2xl border border-border/70 bg-white/80 p-5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {session.mode === "improvisation"
+                              ? "Improvisacion"
+                              : "Presentacion"}
+                          </p>
+                          {session.sessionCode ? (
+                            <p className="mt-1 font-mono text-xs font-semibold text-secondary">
+                              {session.sessionCode}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                          {session.status === "canceled"
+                            ? "Cancelada"
+                            : difficultyLabels[session.difficulty]}
+                        </span>
+                      </div>
+                      <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
+                        <p>Creada: {formatDate(session.createdAt)}</p>
+                        <p>Programada: {formatOptionalDate(session.scheduledAt)}</p>
+                        <p>
+                          Modo:{" "}
+                          {session.mode === "improvisation"
+                            ? "Improvisacion"
+                            : "Presentacion"}
+                        </p>
+                        <p>Estado: {session.status ?? "active"}</p>
+                      </div>
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        {session.mode === "improvisation"
+                          ? session.textTitle ?? "Tema no disponible"
+                          : session.fileName ?? "Archivo no disponible"}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(session.audioUrl ?? session.videoUrl) ? (
+                          <a
+                            href={session.audioUrl ?? session.videoUrl ?? undefined}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                          >
+                            Audio
+                          </a>
+                        ) : (
+                          <span className="rounded-lg border border-dashed border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                            Audio pendiente
+                          </span>
+                        )}
+                        <span className="rounded-lg border border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                          {session.feedback ? "Feedback registrado" : "Feedback pendiente"}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
+                    Este alumno aun no tiene sesiones para mostrar.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      ) : null}
     </div>
   );
 };
