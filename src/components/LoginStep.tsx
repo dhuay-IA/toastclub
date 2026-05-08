@@ -13,7 +13,7 @@ interface LoginStepProps {
     email: string,
     name?: string,
     token?: string,
-    role?: "student" | "admin"
+    role?: "student" | "admin" | "agent"
   ) => void;
   onRegisterSuccess: (email: string, name: string) => void;
 }

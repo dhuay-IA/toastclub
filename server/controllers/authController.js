@@ -31,15 +31,30 @@ const getConfiguredAdminEmails = () =>
     .filter(Boolean);
 const isConfiguredAdminEmail = (email) =>
   getConfiguredAdminEmails().includes(email.trim().toLowerCase());
+const getConfiguredAgentEmails = () =>
+  (process.env.AGENT_EMAILS || "")
+    .split(",")
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+const isConfiguredAgentEmail = (email) =>
+  getConfiguredAgentEmails().includes(email.trim().toLowerCase());
 
-const ensureAdminRole = async (user) => {
-  if (!user || user.role === "admin" || !isConfiguredAdminEmail(user.email)) {
+const getConfiguredRole = (email) => {
+  if (isConfiguredAdminEmail(email)) return "admin";
+  if (isConfiguredAgentEmail(email)) return "agent";
+  return "student";
+};
+
+const ensureConfiguredRole = async (user) => {
+  const configuredRole = user ? getConfiguredRole(user.email) : "student";
+
+  if (!user || user.role === configuredRole) {
     return user;
   }
 
   await updateUserRole({
     userId: user.id,
-    role: "admin",
+    role: configuredRole,
   });
 
   return findUserById(user.id);
@@ -107,7 +122,7 @@ export const register = async (req, res) => {
     email: normalizedEmail,
     name: trimmedName,
     passwordHash,
-    role: isConfiguredAdminEmail(normalizedEmail) ? "admin" : "student",
+    role: getConfiguredRole(normalizedEmail),
   });
 
   return res.status(201).json({
@@ -167,7 +182,7 @@ export const login = async (req, res) => {
     });
   }
 
-  const effectiveUser = await ensureAdminRole(user);
+  const effectiveUser = await ensureConfiguredRole(user);
   const token = signToken(effectiveUser);
 
   return res.status(200).json({

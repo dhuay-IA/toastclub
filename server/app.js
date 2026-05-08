@@ -11,6 +11,7 @@ config({ path: path.resolve(__dirname, ".env.local") });
 import cors from "cors";
 import "./config/db.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import agentRoutes from "./routes/agentRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import presentationRoutes from "./routes/presentationRoutes.js";
@@ -37,6 +38,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api", authRoutes);
 app.use("/api", adminRoutes);
+app.use("/api", agentRoutes);
 app.use("/api", profileRoutes);
 app.use("/api", presentationRoutes);
 app.use("/api", vrRoutes);

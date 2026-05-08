@@ -52,3 +52,14 @@ export const requireAdmin = async (req, res, next) => {
 
   return next();
 };
+
+export const requireAgentOrAdmin = async (req, res, next) => {
+  if (req.user?.role !== "admin" && req.user?.role !== "agent") {
+    return res.status(403).json({
+      success: false,
+      message: "Agent or admin access is required.",
+    });
+  }
+
+  return next();
+};

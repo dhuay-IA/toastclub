@@ -11,7 +11,7 @@ export type AuthenticatedUser = {
   id?: number | string;
   email?: string;
   name?: string;
-  role?: "student" | "admin";
+  role?: "student" | "admin" | "agent";
   isVerified?: boolean;
 };
 
@@ -247,7 +247,7 @@ export function resetPassword(email: string, code: string, password: string) {
 }
 
 export function getProfile(token: string) {
-  return getFromApi<{ id: number; email: string; name: string; role: "student" | "admin" }>(
+  return getFromApi<{ id: number; email: string; name: string; role: "student" | "admin" | "agent" }>(
     "/api/profile",
     token
   );
@@ -274,7 +274,7 @@ export function getAdminReport(token: string) {
       id: number;
       email: string;
       name: string;
-      role: "student" | "admin";
+      role: "student" | "admin" | "agent";
       firstSeenAt: string;
       lastSeenAt: string;
       totalSessions: number;
@@ -302,6 +302,49 @@ export function getAdminReport(token: string) {
       } | null;
     }>;
   }>("/api/admin/report", token);
+}
+
+export function getAgentStudents(token: string) {
+  return getFromApi<
+    Array<{
+      id: number;
+      email: string;
+      name: string;
+      firstSeenAt: string;
+      lastSeenAt: string;
+      totalSessions: number;
+    }>
+  >("/api/agent/students", token);
+}
+
+export function getAgentSessionByCode(token: string, sessionCode: string) {
+  return getFromApi<{
+    id: string;
+    userId: number;
+    studentName: string;
+    studentEmail: string;
+    sessionCode: string;
+    mode: "improvisation" | "presentation";
+    difficulty: "easy" | "medium" | "hard";
+    status: "active" | "completed" | "canceled";
+    audioUrl?: string | null;
+    videoUrl?: string | null;
+    createdAt: string;
+    scheduledAt?: string;
+    fileName?: string;
+    slideCount?: number;
+    textTitle?: string;
+    promptWord?: string;
+    textPrompt?: string;
+    selectedTags?: string[];
+    duration?: number | null;
+    feedback?: {
+      confidence: string;
+      audienceReaction: string;
+      improvement: string;
+      notes: string;
+    } | null;
+  }>(`/api/agent/session-code/${encodeURIComponent(sessionCode)}`, token);
 }
 
 async function postFileToApi<T>(

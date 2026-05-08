@@ -52,7 +52,7 @@ export const listUsersForAdminReport = async () => {
   const [users] = await pool.execute(
     `SELECT id, email, name, role, created_at, updated_at
      FROM users
-     WHERE role <> 'admin'
+     WHERE role = 'student'
      ORDER BY id DESC`
   );
 

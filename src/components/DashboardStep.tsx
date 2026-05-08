@@ -152,6 +152,9 @@ const DashboardStep = ({
     .filter((session) => session.scheduledAt && new Date(session.scheduledAt).getTime() >= Date.now())
     .sort((a, b) => new Date(a.scheduledAt ?? "").getTime() - new Date(b.scheduledAt ?? "").getTime())[0];
   const latestFeedbackSession = activeSessions.find((session) => feedbackComplete(session.feedback));
+  const feedbackTimeline = activeSessions
+    .filter((session) => feedbackComplete(session.feedback))
+    .slice(0, 3);
   const latestSessions = activeSessions.slice(0, 5);
   const pendingAudioCount = activeSessions.length - audioCount;
 
@@ -543,6 +546,37 @@ const DashboardStep = ({
               ) : null}
             </div>
           </div>
+
+          {feedbackTimeline.length > 0 ? (
+            <div className="mt-5 rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Historial de feedback
+                </p>
+                <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  últimos {feedbackTimeline.length}
+                </span>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {feedbackTimeline.map((session) => (
+                  <article
+                    key={`feedback-${session.id}`}
+                    className="rounded-xl border border-border/70 bg-white/80 p-4"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {session.mode === "improvisation" ? "Improvisación" : "Presentación"}
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">
+                      {formatSessionDate(session.createdAt)}
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {session.feedback?.improvement}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className="grid gap-5 lg:grid-cols-[1.35fr_0.8fr]">

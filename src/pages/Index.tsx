@@ -4,6 +4,7 @@ import LoginStep from "@/components/LoginStep";
 import OTPStep from "@/components/OTPStep";
 import TermsStep from "@/components/TermsStep";
 import AdminReportStep from "@/components/AdminReportStep";
+import AgentPanelStep from "@/components/AgentPanelStep";
 import DashboardStep, {
   type SessionFeedback,
   type SessionSummary,
@@ -16,6 +17,8 @@ import SessionReadyStep from "@/components/SessionReadyStep";
 import StepTimeline from "@/components/StepTimeline";
 import {
   cancelVrSession,
+  getAgentSessionByCode,
+  getAgentStudents,
   getAdminReport,
   getAdminUserSessions,
   getProfile,
@@ -122,7 +125,7 @@ const Index = () => {
   const [scheduledAt, setScheduledAt] = useState("");
   const [otpResendCount, setOtpResendCount] = useState(0);
   const [authToken, setAuthToken] = useState("");
-  const [userRole, setUserRole] = useState<"student" | "admin">("student");
+  const [userRole, setUserRole] = useState<"student" | "admin" | "agent">("student");
   const [adminReportUsers, setAdminReportUsers] = useState<UserAccessRecord[]>([]);
   const [adminReportSessions, setAdminReportSessions] = useState<SessionRecord[]>([]);
   const [adminReportMetrics, setAdminReportMetrics] = useState<AdminReportMetrics | null>(null);
@@ -290,10 +293,10 @@ const Index = () => {
       }
 
       const profile = res.data as
-        | { email?: string; name?: string; role?: "student" | "admin" }
+        | { email?: string; name?: string; role?: "student" | "admin" | "agent" }
         | undefined;
 
-      setUserRole(profile?.role === "admin" ? "admin" : "student");
+      setUserRole(profile?.role === "admin" || profile?.role === "agent" ? profile.role : "student");
       if (profile?.email) setEmail(profile.email);
       if (profile?.name) {
         setUserName(profile.name);
@@ -305,6 +308,30 @@ const Index = () => {
       cancelled = true;
     };
   }, [authToken]);
+
+  useEffect(() => {
+    if (userRole !== "agent" || !authToken || currentStep !== "dashboard") {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      const res = await getAgentStudents(authToken);
+
+      if (cancelled || !res.success) {
+        return;
+      }
+
+      const students = (res.data as UserAccessRecord[]) ?? [];
+      setAdminReportUsers(students);
+      setSelectedAdminStudentId((current) => current || String(students[0]?.id ?? ""));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authToken, currentStep, userRole]);
 
   useEffect(() => {
     if (
@@ -460,7 +487,7 @@ const Index = () => {
     userEmail: string,
     explicitName?: string,
     token?: string,
-    role: "student" | "admin" = "student"
+    role: "student" | "admin" | "agent" = "student"
   ) => {
     setOtpResendCount(0);
     setEmail(userEmail);
@@ -542,7 +569,9 @@ const Index = () => {
   const handleDifficulty = async (selectedDifficulty: "easy" | "medium" | "hard") => {
     setDifficulty(selectedDifficulty);
 
-    if (userRole === "admin" && !selectedAdminStudentId) {
+    const isStaffSessionCreator = userRole === "admin" || userRole === "agent";
+
+    if (isStaffSessionCreator && !selectedAdminStudentId) {
       window.alert("Selecciona un student antes de crear la sesion.");
       setCurrentStep("dashboard");
       return;
@@ -550,7 +579,7 @@ const Index = () => {
 
     const creation = await createPracticeSession({
       token: authToken || undefined,
-      targetUserId: userRole === "admin" ? selectedAdminStudentId : undefined,
+      targetUserId: isStaffSessionCreator ? selectedAdminStudentId : undefined,
       mode,
       difficulty: selectedDifficulty,
       fileName,
@@ -595,7 +624,7 @@ const Index = () => {
       duration,
     };
 
-    const isAdminAssignedSession = userRole === "admin" && Boolean(selectedAdminStudentId);
+    const isAdminAssignedSession = isStaffSessionCreator && Boolean(selectedAdminStudentId);
 
     if (authToken && !isAdminAssignedSession) {
       setSessionHistory((current) =>
@@ -761,7 +790,7 @@ const Index = () => {
 
     applyUploadedAudioToSession(uploadedSession?.sessionCode ?? session.sessionCode, uploadedAudioUrl);
 
-    if (userRole === "admin") {
+    if (userRole === "admin" || userRole === "agent") {
       setAdminReportRefreshKey((key) => key + 1);
     }
   };
@@ -807,8 +836,55 @@ const Index = () => {
     }));
   };
 
+  const handleLookupAgentSession = async (code: string) => {
+    if (!authToken) {
+      throw new Error("No hay sesion de agent activa.");
+    }
+
+    const res = await getAgentSessionByCode(authToken, code);
+
+    if (!res.success) {
+      throw new Error(res.message || "No se pudo validar el codigo.");
+    }
+
+    return res.data as {
+      id: string;
+      userId: number;
+      studentName: string;
+      studentEmail: string;
+      sessionCode: string;
+      mode: "improvisation" | "presentation";
+      difficulty: "easy" | "medium" | "hard";
+      status: "active" | "completed" | "canceled";
+      audioUrl?: string | null;
+      videoUrl?: string | null;
+      createdAt: string;
+      scheduledAt?: string;
+      fileName?: string;
+      slideCount?: number;
+      textTitle?: string;
+      promptWord?: string;
+      duration?: number | null;
+    };
+  };
+
+  const handleUploadAudioByCode = async (code: string, file: File) => {
+    await handleUploadSessionAudio(
+      {
+        id: code,
+        sessionCode: code,
+        mode: "improvisation",
+        difficulty: "medium",
+        createdAt: new Date().toISOString(),
+      },
+      file
+    );
+  };
+
   const adminUsers = adminReportUsers;
   const isCurrentUserAdmin = userRole === "admin";
+  const isCurrentUserAgent = userRole === "agent";
+  const isStaffSessionCreator = isCurrentUserAdmin || isCurrentUserAgent;
   const adminSessions = adminReportSessions;
 
   if (currentStep === "landing") {
@@ -873,18 +949,31 @@ const Index = () => {
           />
         )}
         {currentStep === "dashboard" && (
-          <DashboardStep
-            userName={userName || formatDisplayName(email)}
-            onSelectMode={handleMode}
-            onLogout={handleLogout}
-            onOpenFeedback={handleOpenFeedback}
-            onCancelSession={handleCancelSession}
-            onUploadAudio={handleUploadSessionAudio}
-            onOpenAdminReport={isCurrentUserAdmin ? () => setCurrentStep("admin-report") : undefined}
-            sessionSummary={sessionHistory[0] ?? null}
-            sessionHistory={sessionHistory}
-            isAdmin={isCurrentUserAdmin}
-          />
+          isCurrentUserAgent ? (
+            <AgentPanelStep
+              agentName={userName || formatDisplayName(email)}
+              students={adminUsers}
+              selectedStudentId={selectedAdminStudentId}
+              onSelectStudent={setSelectedAdminStudentId}
+              onCreateSession={handleMode}
+              onLookupSession={handleLookupAgentSession}
+              onUploadAudioByCode={handleUploadAudioByCode}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <DashboardStep
+              userName={userName || formatDisplayName(email)}
+              onSelectMode={handleMode}
+              onLogout={handleLogout}
+              onOpenFeedback={handleOpenFeedback}
+              onCancelSession={handleCancelSession}
+              onUploadAudio={handleUploadSessionAudio}
+              onOpenAdminReport={isCurrentUserAdmin ? () => setCurrentStep("admin-report") : undefined}
+              sessionSummary={sessionHistory[0] ?? null}
+              sessionHistory={sessionHistory}
+              isAdmin={isCurrentUserAdmin}
+            />
+          )
         )}
         {currentStep === "admin-report" && isCurrentUserAdmin && (
           <AdminReportStep
@@ -913,7 +1002,7 @@ const Index = () => {
           <ImprovisationConfigStep
             onComplete={handleImprovConfig}
             onBack={() => setCurrentStep("dashboard")}
-            isAdmin={isCurrentUserAdmin}
+            isAdmin={isStaffSessionCreator}
             adminUsers={adminUsers}
             selectedAdminStudentId={selectedAdminStudentId}
             onSelectAdminStudent={setSelectedAdminStudentId}
@@ -923,7 +1012,7 @@ const Index = () => {
           <PresentationConfigStep
             onComplete={handlePresentationConfig}
             onBack={() => setCurrentStep("dashboard")}
-            isAdmin={isCurrentUserAdmin}
+            isAdmin={isStaffSessionCreator}
             adminUsers={adminUsers}
             selectedAdminStudentId={selectedAdminStudentId}
             onSelectAdminStudent={setSelectedAdminStudentId}

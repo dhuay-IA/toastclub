@@ -136,14 +136,16 @@ export const startVrSession = async (req, res) => {
 
   let sessionUserId = req.user.id;
 
-  if (req.user.role === "admin" && !targetUserId) {
+  const isStaffCreator = req.user.role === "admin" || req.user.role === "agent";
+
+  if (isStaffCreator && !targetUserId) {
     return res.status(400).json({
       success: false,
       message: "Selecciona un estudiante para crear la sesion desde admin.",
     });
   }
 
-  if (req.user.role === "admin" && targetUserId) {
+  if (isStaffCreator && targetUserId) {
     const numericTargetUserId = Number(targetUserId);
 
     if (!Number.isInteger(numericTargetUserId) || numericTargetUserId <= 0) {
@@ -155,7 +157,7 @@ export const startVrSession = async (req, res) => {
 
     const targetUser = await findUserById(numericTargetUserId);
 
-    if (!targetUser || targetUser.role === "admin") {
+    if (!targetUser || targetUser.role !== "student") {
       return res.status(404).json({
         success: false,
         message: "No se encontro un estudiante valido para asignar la sesion.",
@@ -166,10 +168,11 @@ export const startVrSession = async (req, res) => {
   }
 
   const sessionMetadata =
-    req.user.role === "admin" && sessionUserId !== req.user.id
+    isStaffCreator && sessionUserId !== req.user.id
       ? {
           ...(metadata ?? {}),
-          assignedByAdminId: req.user.id,
+          assignedByStaffId: req.user.id,
+          assignedByStaffRole: req.user.role,
         }
       : metadata ?? null;
 

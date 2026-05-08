@@ -97,6 +97,8 @@ const downloadCsv = (
       "Fecha Sesion",
       "Fecha Programada",
       "Estado",
+      "Audio",
+      "Feedback",
     ],
     ...users.map((user) => [
       "Usuario",
@@ -105,6 +107,8 @@ const downloadCsv = (
       "",
       sessionsByUser.get(user.email) ?? 0,
       formatDate(user.lastSeenAt),
+      "",
+      "",
       "",
       "",
       "",
@@ -123,6 +127,8 @@ const downloadCsv = (
       formatDate(session.createdAt),
       formatOptionalDate(session.scheduledAt),
       session.status ?? "active",
+      session.audioUrl ?? session.videoUrl ?? "",
+      session.feedback ? "Registrado" : "Pendiente",
     ]),
   ];
 
@@ -164,6 +170,8 @@ const AdminReportStep = ({
   const [studentSearch, setStudentSearch] = useState("");
   const [sessionModeFilter, setSessionModeFilter] = useState<"all" | "improvisation" | "presentation">("all");
   const [sessionStatusFilter, setSessionStatusFilter] = useState<"all" | "active" | "completed" | "canceled">("all");
+  const [sessionFromDate, setSessionFromDate] = useState("");
+  const [sessionToDate, setSessionToDate] = useState("");
   const computedImprovSessions = sessions.filter((session) => session.mode === "improvisation").length;
   const computedPresentationSessions = sessions.filter((session) => session.mode === "presentation").length;
   const computedCanceledSessions = sessions.filter((session) => session.status === "canceled").length;
@@ -217,7 +225,10 @@ const AdminReportStep = ({
     .filter((session) => {
       const matchesMode = sessionModeFilter === "all" || session.mode === sessionModeFilter;
       const matchesStatus = sessionStatusFilter === "all" || (session.status ?? "active") === sessionStatusFilter;
-      return matchesMode && matchesStatus;
+      const createdTime = new Date(session.createdAt).getTime();
+      const matchesFrom = !sessionFromDate || createdTime >= new Date(`${sessionFromDate}T00:00:00`).getTime();
+      const matchesTo = !sessionToDate || createdTime <= new Date(`${sessionToDate}T23:59:59`).getTime();
+      return matchesMode && matchesStatus && matchesFrom && matchesTo;
     })
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const selectedUser = topUsers.find((user) => user.email === selectedUserEmail) ?? null;
@@ -551,6 +562,20 @@ const AdminReportStep = ({
                 <option value="completed">Completadas</option>
                 <option value="canceled">Canceladas</option>
               </select>
+              <input
+                type="date"
+                value={sessionFromDate}
+                onChange={(event) => setSessionFromDate(event.target.value)}
+                className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+                aria-label="Filtrar desde"
+              />
+              <input
+                type="date"
+                value={sessionToDate}
+                onChange={(event) => setSessionToDate(event.target.value)}
+                className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+                aria-label="Filtrar hasta"
+              />
             </div>
 
             {filteredSessions.length > 0 ? (
