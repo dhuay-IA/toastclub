@@ -63,9 +63,9 @@ const formatDate = (value: string) =>
 
 const formatOptionalDate = (value?: string) => (value ? formatDate(value) : "Por confirmar");
 const difficultyLabels = {
-  easy: "Facil",
+  easy: "Fácil",
   medium: "Medio",
-  hard: "Dificil",
+  hard: "Difícil",
 };
 
 const csvEscape = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
@@ -115,7 +115,7 @@ const downloadCsv = (
       "",
       "",
       session.mode === "improvisation" ? "Improvisacion" : "Presentacion",
-      session.difficulty,
+      difficultyLabels[session.difficulty],
       formatDate(session.createdAt),
       formatOptionalDate(session.scheduledAt),
       session.status ?? "active",
@@ -568,7 +568,7 @@ const AdminReportStep = ({
                           ? "bg-destructive/10 text-destructive"
                           : "bg-muted text-muted-foreground"
                       }`}>
-                        {session.status === "canceled" ? "Cancelada" : session.difficulty}
+                        {session.status === "canceled" ? "Cancelada" : difficultyLabels[session.difficulty]}
                       </span>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">

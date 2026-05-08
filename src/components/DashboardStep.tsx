@@ -55,9 +55,9 @@ interface DashboardStepProps {
 }
 
 const difficultyLabels = {
-  easy: "Facil",
+  easy: "Fácil",
   medium: "Medio",
-  hard: "Dificil",
+  hard: "Difícil",
 };
 
 const modeCards = [
