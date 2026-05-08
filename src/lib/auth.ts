@@ -304,6 +304,54 @@ export function getAdminReport(token: string) {
   }>("/api/admin/report", token);
 }
 
+async function postFileToApi<T>(
+  path: string,
+  formData: FormData,
+  token?: string
+): Promise<AuthResponse> {
+  const { baseUrl, type } = getAuthProvider();
+
+  if (type !== "api") {
+    throw new Error("Esta operación requiere VITE_API_URL.");
+  }
+
+  let res: Response;
+
+  try {
+    res = await fetch(`${baseUrl}${path}`, {
+      method: "POST",
+      headers: token
+        ? {
+            Authorization: `Bearer ${token}`,
+          }
+        : undefined,
+      body: formData,
+    });
+  } catch {
+    return {
+      success: false,
+      message:
+        "No se pudo conectar con el servidor. Verifica que la API esté corriendo en " +
+        `${baseUrl}.`,
+    };
+  }
+
+  const responsePayload = (await res.json().catch(() => ({}))) as ApiEnvelope<T>;
+
+  if (!res.ok) {
+    return {
+      success: false,
+      message: responsePayload?.message || "No se pudo completar la solicitud.",
+    };
+  }
+
+  return {
+    success: Boolean(responsePayload?.success),
+    message: responsePayload?.message || "",
+    data: responsePayload?.data,
+  };
+}
+
 export function getAdminUserSessions(token: string, userId: number | string) {
   return getFromApi<
     Array<{
@@ -455,4 +503,23 @@ export function saveVrSessionFeedback(
     } | null;
     updatedAt: string;
   }>(`/api/vr/session/${sessionId}/feedback`, token, { feedback });
+}
+
+export function uploadVrSessionAudioByCode(
+  sessionCode: string,
+  audioFile: File,
+  token?: string
+) {
+  const formData = new FormData();
+  formData.append("audio", audioFile);
+
+  return postFileToApi<{
+    id: number;
+    sessionCode: string;
+    status: "active" | "completed" | "canceled";
+    audioUrl?: string | null;
+    videoUrl?: string | null;
+    videoUploadedAt?: string | null;
+    updatedAt: string;
+  }>(`/api/vr/session-code/${encodeURIComponent(sessionCode)}/audio`, formData, token);
 }

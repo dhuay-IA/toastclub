@@ -97,18 +97,21 @@ export const listVrSessionsByUser = async ({ userId, limit = 10 }) => {
   return rows;
 };
 
-export const attachVideoToVrSession = async ({ sessionId, videoUrl }) => {
+export const attachAudioToVrSession = async ({ sessionId, audioUrl }) => {
   await pool.execute(
     `UPDATE vr_sessions
      SET video_url = ?,
          video_uploaded_at = CURRENT_TIMESTAMP,
          updated_at = CURRENT_TIMESTAMP
      WHERE id = ?`,
-    [videoUrl, sessionId]
+    [audioUrl, sessionId]
   );
 
   return findVrSessionById(sessionId);
 };
+
+export const attachVideoToVrSession = ({ sessionId, videoUrl }) =>
+  attachAudioToVrSession({ sessionId, audioUrl: videoUrl });
 
 export const completeVrSession = async ({ sessionId, userId, result }) => {
   await pool.execute(

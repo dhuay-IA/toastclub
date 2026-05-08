@@ -1,5 +1,5 @@
 import {
-  attachVideoToVrSession,
+  attachAudioToVrSession,
   cancelVrSession,
   completeVrSession,
   createVrSession,
@@ -387,7 +387,7 @@ export const cancelMyVrSession = async (req, res) => {
   });
 };
 
-export const uploadVrSessionVideoByCode = async (req, res) => {
+export const uploadVrSessionAudioByCode = async (req, res) => {
   if (!validateVrAppAccess(req, res)) {
     return;
   }
@@ -426,10 +426,10 @@ export const uploadVrSessionVideoByCode = async (req, res) => {
 
   await fs.writeFile(filePath, mediaFile.buffer);
 
-  const videoUrl = `${getPublicApiBaseUrl(req)}/uploads/vr/${fileName}`;
-  const updatedSession = await attachVideoToVrSession({
+  const audioUrl = `${getPublicApiBaseUrl(req)}/uploads/vr/${fileName}`;
+  const updatedSession = await attachAudioToVrSession({
     sessionId: session.id,
-    videoUrl,
+    audioUrl,
   });
 
   return res.status(200).json({
@@ -438,3 +438,5 @@ export const uploadVrSessionVideoByCode = async (req, res) => {
     data: serializeSession(updatedSession),
   });
 };
+
+export const uploadVrSessionVideoByCode = uploadVrSessionAudioByCode;

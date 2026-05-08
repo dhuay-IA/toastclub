@@ -48,6 +48,7 @@ interface DashboardStepProps {
   onLogout: () => void;
   onOpenFeedback: (sessionId: string) => void;
   onCancelSession: (sessionId: string) => void;
+  onUploadAudio?: (session: SessionSummary, file: File) => Promise<void>;
   onOpenAdminReport?: () => void;
   sessionSummary?: SessionSummary | null;
   sessionHistory: SessionSummary[];
@@ -107,6 +108,7 @@ const DashboardStep = ({
   onLogout,
   onOpenFeedback,
   onCancelSession,
+  onUploadAudio,
   onOpenAdminReport,
   sessionSummary,
   sessionHistory,
@@ -658,9 +660,21 @@ const DashboardStep = ({
                       Ver audio
                     </a>
                   ) : (
-                    <div className="inline-flex flex-1 items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-4 py-3 text-center text-sm font-medium text-muted-foreground">
-                      Audio pendiente
-                    </div>
+                    <label className="inline-flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-4 py-3 text-center text-sm font-medium text-muted-foreground transition-colors hover:border-secondary hover:text-secondary">
+                      Subir audio
+                      <input
+                        type="file"
+                        accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm"
+                        className="sr-only"
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (file && onUploadAudio) {
+                            void onUploadAudio(sessionSummary, file);
+                          }
+                        }}
+                      />
+                    </label>
                   )}
                   <button
                     onClick={() => onOpenFeedback(sessionSummary.id)}
@@ -778,9 +792,21 @@ const DashboardStep = ({
                         Audio
                       </a>
                     ) : (
-                      <div className="inline-flex items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-3 py-3 text-center text-sm font-medium text-muted-foreground">
-                        Audio pendiente
-                      </div>
+                      <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-dashed border-border bg-white/70 px-3 py-3 text-center text-sm font-medium text-muted-foreground transition-colors hover:border-secondary hover:text-secondary">
+                        Subir audio
+                        <input
+                          type="file"
+                          accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm"
+                          className="sr-only"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = "";
+                            if (file && onUploadAudio) {
+                              void onUploadAudio(session, file);
+                            }
+                          }}
+                        />
+                      </label>
                     )}
                     <button
                       onClick={() => onOpenFeedback(session.id)}

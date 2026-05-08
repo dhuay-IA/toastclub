@@ -34,6 +34,10 @@ type AdminReportStepProps = {
   onLoadUserSessions?: (
     userId: number
   ) => Promise<Array<SessionSummary & { userId?: number; email: string; name?: string }>>;
+  onUploadAudio?: (
+    session: SessionSummary & { userId?: number; email: string; name?: string },
+    file: File
+  ) => Promise<void>;
   onRefresh: () => void;
   onBack: () => void;
   onLogout: () => void;
@@ -146,6 +150,7 @@ const AdminReportStep = ({
   error = "",
   dataSourceLabel = "servidor",
   onLoadUserSessions,
+  onUploadAudio,
   onRefresh,
   onBack,
   onLogout,
@@ -159,38 +164,42 @@ const AdminReportStep = ({
   const [studentSearch, setStudentSearch] = useState("");
   const [sessionModeFilter, setSessionModeFilter] = useState<"all" | "improvisation" | "presentation">("all");
   const [sessionStatusFilter, setSessionStatusFilter] = useState<"all" | "active" | "completed" | "canceled">("all");
-  const totalStudents = metrics?.totalStudents ?? users.length;
-  const totalSessions = metrics?.totalSessions ?? sessions.length;
+  const computedImprovSessions = sessions.filter((session) => session.mode === "improvisation").length;
+  const computedPresentationSessions = sessions.filter((session) => session.mode === "presentation").length;
+  const computedCanceledSessions = sessions.filter((session) => session.status === "canceled").length;
+  const computedAudioSessions = sessions.filter((session) => session.audioUrl ?? session.videoUrl).length;
+  const computedFeedbackSessions = sessions.filter((session) => session.feedback).length;
+  const computedRecentSessions = sessions.filter(
+    (session) =>
+      new Date(session.createdAt).getTime() >=
+      Date.now() - 7 * 24 * 60 * 60 * 1000
+  ).length;
+  const computedDifficultyTotals = sessions.reduce(
+    (totals, session) => ({
+      ...totals,
+      [session.difficulty]: totals[session.difficulty] + 1,
+    }),
+    { easy: 0, medium: 0, hard: 0 }
+  );
+  const totalStudents = Math.max(metrics?.totalStudents ?? 0, users.length);
+  const totalSessions = Math.max(metrics?.totalSessions ?? 0, sessions.length);
   const improvSessions =
-    metrics?.improvisationSessions ??
-    sessions.filter((session) => session.mode === "improvisation").length;
+    Math.max(metrics?.improvisationSessions ?? 0, computedImprovSessions);
   const presentationSessions =
-    metrics?.presentationSessions ?? totalSessions - improvSessions;
+    Math.max(metrics?.presentationSessions ?? 0, computedPresentationSessions);
   const canceledSessions =
-    metrics?.canceledSessions ??
-    sessions.filter((session) => session.status === "canceled").length;
+    Math.max(metrics?.canceledSessions ?? 0, computedCanceledSessions);
   const audioSessions =
-    metrics?.audioSessions ??
-    sessions.filter((session) => session.audioUrl ?? session.videoUrl).length;
+    Math.max(metrics?.audioSessions ?? 0, computedAudioSessions);
   const feedbackSessions =
-    metrics?.feedbackSessions ??
-    sessions.filter((session) => session.feedback).length;
+    Math.max(metrics?.feedbackSessions ?? 0, computedFeedbackSessions);
   const recentSessions =
-    metrics?.recentSessions ??
-    sessions.filter(
-      (session) =>
-        new Date(session.createdAt).getTime() >=
-        Date.now() - 7 * 24 * 60 * 60 * 1000
-    ).length;
-  const difficultyTotals =
-    metrics?.difficulty ??
-    sessions.reduce(
-      (totals, session) => ({
-        ...totals,
-        [session.difficulty]: totals[session.difficulty] + 1,
-      }),
-      { easy: 0, medium: 0, hard: 0 }
-    );
+    Math.max(metrics?.recentSessions ?? 0, computedRecentSessions);
+  const difficultyTotals = {
+    easy: Math.max(metrics?.difficulty?.easy ?? 0, computedDifficultyTotals.easy),
+    medium: Math.max(metrics?.difficulty?.medium ?? 0, computedDifficultyTotals.medium),
+    hard: Math.max(metrics?.difficulty?.hard ?? 0, computedDifficultyTotals.hard),
+  };
 
   const topUsers = users
     .map((user) => ({
@@ -204,11 +213,13 @@ const AdminReportStep = ({
     if (!query) return true;
     return user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query);
   });
-  const filteredSessions = sessions.filter((session) => {
-    const matchesMode = sessionModeFilter === "all" || session.mode === sessionModeFilter;
-    const matchesStatus = sessionStatusFilter === "all" || (session.status ?? "active") === sessionStatusFilter;
-    return matchesMode && matchesStatus;
-  });
+  const filteredSessions = sessions
+    .filter((session) => {
+      const matchesMode = sessionModeFilter === "all" || session.mode === sessionModeFilter;
+      const matchesStatus = sessionStatusFilter === "all" || (session.status ?? "active") === sessionStatusFilter;
+      return matchesMode && matchesStatus;
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const selectedUser = topUsers.find((user) => user.email === selectedUserEmail) ?? null;
   const selectedUserId = selectedUser?.id ? String(selectedUser.id) : "";
   const selectedUserEmailNormalized = selectedUser?.email.trim().toLowerCase() ?? "";
@@ -592,6 +603,22 @@ const AdminReportStep = ({
                         >
                           Audio
                         </a>
+                      ) : onUploadAudio ? (
+                        <label className="cursor-pointer rounded-lg border border-dashed border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-secondary hover:text-secondary">
+                          Subir audio
+                          <input
+                            type="file"
+                            accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm"
+                            className="sr-only"
+                            onChange={(event) => {
+                              const file = event.target.files?.[0];
+                              event.target.value = "";
+                              if (file) {
+                                void onUploadAudio(session, file);
+                              }
+                            }}
+                          />
+                        </label>
                       ) : (
                         <span className="rounded-lg border border-dashed border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
                           Audio pendiente
@@ -725,6 +752,22 @@ const AdminReportStep = ({
                           >
                             Audio
                           </a>
+                        ) : onUploadAudio ? (
+                          <label className="cursor-pointer rounded-lg border border-dashed border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-secondary hover:text-secondary">
+                            Subir audio
+                            <input
+                              type="file"
+                              accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm"
+                              className="sr-only"
+                              onChange={(event) => {
+                                const file = event.target.files?.[0];
+                                event.target.value = "";
+                                if (file) {
+                                  void onUploadAudio(session, file);
+                                }
+                              }}
+                            />
+                          </label>
                         ) : (
                           <span className="rounded-lg border border-dashed border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
                             Audio pendiente

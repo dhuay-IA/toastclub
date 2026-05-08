@@ -8,6 +8,7 @@ import {
   listMyVrSessions,
   saveMyVrSessionFeedback,
   startVrSession,
+  uploadVrSessionAudioByCode,
   uploadVrSessionVideoByCode,
 } from "../controllers/vrController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
@@ -32,7 +33,7 @@ router.post(
 router.post(
   "/vr/session-code/:sessionCode/audio",
   upload.fields([{ name: "audio", maxCount: 1 }, { name: "video", maxCount: 1 }]),
-  asyncHandler(uploadVrSessionVideoByCode)
+  asyncHandler(uploadVrSessionAudioByCode)
 );
 router.get("/vr/sessions", asyncHandler(authenticateToken), asyncHandler(listMyVrSessions));
 router.get(

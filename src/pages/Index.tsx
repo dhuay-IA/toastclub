@@ -21,6 +21,7 @@ import {
   getProfile,
   getVrSessions,
   saveVrSessionFeedback,
+  uploadVrSessionAudioByCode,
 } from "@/lib/auth";
 import { createPracticeSession } from "@/lib/vr";
 
@@ -704,6 +705,67 @@ const Index = () => {
     setCurrentStep("dashboard");
   };
 
+  const applyUploadedAudioToSession = (sessionCode: string, audioUrl: string | null) => {
+    if (!audioUrl) return;
+
+    const updateByCode = (sessions: SessionRecord[]) =>
+      sessions
+        .map((session) =>
+          session.sessionCode === sessionCode
+            ? {
+                ...session,
+                audioUrl,
+                videoUrl: audioUrl,
+              }
+            : session
+        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    setSessionHistory((current) => updateByCode(current));
+    setAllSessions((current) => updateByCode(current));
+    setAdminReportSessions((current) => updateByCode(current));
+
+    const stored = localStorage.getItem(SESSION_HISTORY_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored) as SessionRecord[];
+      localStorage.setItem(SESSION_HISTORY_KEY, JSON.stringify(updateByCode(parsed)));
+    }
+  };
+
+  const handleUploadSessionAudio = async (session: SessionSummary, file: File) => {
+    if (!session.sessionCode) {
+      window.alert("Esta sesion aun no tiene codigo para asociar el audio.");
+      return;
+    }
+
+    if (!file.type.startsWith("audio/") && !/\.(mp3|wav|m4a|aac|ogg|webm)$/i.test(file.name)) {
+      window.alert("Selecciona un archivo de audio valido.");
+      return;
+    }
+
+    const res = await uploadVrSessionAudioByCode(session.sessionCode, file, authToken || undefined);
+
+    if (!res.success) {
+      window.alert(res.message || "No se pudo subir el audio.");
+      return;
+    }
+
+    const uploadedSession = res.data as
+      | {
+          sessionCode?: string;
+          audioUrl?: string | null;
+          videoUrl?: string | null;
+        }
+      | undefined;
+    const uploadedAudioUrl = uploadedSession?.audioUrl ?? uploadedSession?.videoUrl ?? null;
+
+    applyUploadedAudioToSession(uploadedSession?.sessionCode ?? session.sessionCode, uploadedAudioUrl);
+
+    if (userRole === "admin") {
+      setAdminReportRefreshKey((key) => key + 1);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_NAME_KEY);
@@ -817,6 +879,7 @@ const Index = () => {
             onLogout={handleLogout}
             onOpenFeedback={handleOpenFeedback}
             onCancelSession={handleCancelSession}
+            onUploadAudio={handleUploadSessionAudio}
             onOpenAdminReport={isCurrentUserAdmin ? () => setCurrentStep("admin-report") : undefined}
             sessionSummary={sessionHistory[0] ?? null}
             sessionHistory={sessionHistory}
@@ -833,6 +896,7 @@ const Index = () => {
             error={adminReportError}
             dataSourceLabel="base real"
             onLoadUserSessions={handleLoadAdminUserSessions}
+            onUploadAudio={handleUploadSessionAudio}
             onRefresh={() => setAdminReportRefreshKey((key) => key + 1)}
             onBack={() => setCurrentStep("dashboard")}
             onLogout={handleLogout}
