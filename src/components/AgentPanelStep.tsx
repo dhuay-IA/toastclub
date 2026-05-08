@@ -40,11 +40,13 @@ type AgentSessionLookup = {
 type AgentPanelStepProps = {
   agentName: string;
   students: AgentStudent[];
+  sessions: AgentSessionLookup[];
   selectedStudentId: string;
   onSelectStudent: (studentId: string) => void;
   onCreateSession: (mode: "improvisation" | "presentation") => void;
   onLookupSession: (sessionCode: string) => Promise<AgentSessionLookup>;
   onUploadAudioByCode: (sessionCode: string, file: File) => Promise<void>;
+  onRefresh: () => void;
   onLogout: () => void;
 };
 
@@ -65,11 +67,13 @@ const formatDate = (value?: string) =>
 const AgentPanelStep = ({
   agentName,
   students,
+  sessions,
   selectedStudentId,
   onSelectStudent,
   onCreateSession,
   onLookupSession,
   onUploadAudioByCode,
+  onRefresh,
   onLogout,
 }: AgentPanelStepProps) => {
   const [sessionCode, setSessionCode] = useState("");
@@ -290,6 +294,104 @@ const AgentPanelStep = ({
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="glass-card p-6 lg:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                Registro del agent
+              </p>
+              <h3 className="mt-1 text-lg font-semibold text-foreground">
+                Sesiones creadas y atendidas
+              </h3>
+            </div>
+            <button
+              onClick={onRefresh}
+              className="rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+            >
+              Actualizar
+            </button>
+          </div>
+
+          {sessions.length > 0 ? (
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {sessions.map((session) => (
+                <article
+                  key={session.id}
+                  className="rounded-2xl border border-border/70 bg-white/75 p-5"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-mono text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                        {session.sessionCode}
+                      </p>
+                      <h4 className="mt-2 text-sm font-semibold text-foreground">
+                        {session.mode === "improvisation" ? "Improvisación" : "Presentación"}
+                      </h4>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {session.studentName} - {session.studentEmail}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                      {session.status === "canceled" ? "Cancelada" : difficultyLabels[session.difficulty]}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-1 text-sm text-muted-foreground">
+                    <p>Creada: {formatDate(session.createdAt)}</p>
+                    <p>Programada: {formatDate(session.scheduledAt)}</p>
+                    <p>
+                      Contenido:{" "}
+                      {session.mode === "improvisation"
+                        ? session.textTitle ?? "Tema no disponible"
+                        : session.fileName ?? "Archivo no disponible"}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {session.audioUrl ?? session.videoUrl ? (
+                      <a
+                        href={session.audioUrl ?? session.videoUrl ?? undefined}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                      >
+                        <Headphones className="h-4 w-4" />
+                        Audio
+                      </a>
+                    ) : (
+                      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-secondary hover:text-secondary">
+                        <Headphones className="h-4 w-4" />
+                        Subir audio
+                        <input
+                          type="file"
+                          accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm"
+                          className="sr-only"
+                          onChange={(event) => {
+                            const file = event.target.files?.[0];
+                            event.target.value = "";
+                            if (file) {
+                              void onUploadAudioByCode(session.sessionCode, file);
+                            }
+                          }}
+                        />
+                      </label>
+                    )}
+                    <span className="rounded-lg border border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                      {session.feedback ? "Feedback registrado" : "Feedback pendiente"}
+                    </span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                Aún no hay sesiones creadas por este agent. Cuando registre una práctica presencial, aparecerá aquí.
+              </p>
+            </div>
+          )}
         </section>
       </div>
     </div>

@@ -18,6 +18,7 @@ import StepTimeline from "@/components/StepTimeline";
 import {
   cancelVrSession,
   getAgentSessionByCode,
+  getAgentSessions,
   getAgentStudents,
   getAdminReport,
   getAdminUserSessions,
@@ -133,6 +134,28 @@ const Index = () => {
   const [adminReportError, setAdminReportError] = useState("");
   const [adminReportRefreshKey, setAdminReportRefreshKey] = useState(0);
   const [selectedAdminStudentId, setSelectedAdminStudentId] = useState("");
+  const [agentSessions, setAgentSessions] = useState<
+    Array<{
+      id: string;
+      userId: number;
+      studentName: string;
+      studentEmail: string;
+      sessionCode: string;
+      mode: "improvisation" | "presentation";
+      difficulty: "easy" | "medium" | "hard";
+      status: "active" | "completed" | "canceled";
+      audioUrl?: string | null;
+      videoUrl?: string | null;
+      createdAt: string;
+      scheduledAt?: string;
+      fileName?: string;
+      slideCount?: number;
+      textTitle?: string;
+      promptWord?: string;
+      duration?: number | null;
+      feedback?: SessionFeedback | null;
+    }>
+  >([]);
 
   const mapApiSessionToRecord = useCallback(
     (session: {
@@ -317,21 +340,34 @@ const Index = () => {
     let cancelled = false;
 
     void (async () => {
-      const res = await getAgentStudents(authToken);
+      const [studentsRes, sessionsRes] = await Promise.all([
+        getAgentStudents(authToken),
+        getAgentSessions(authToken),
+      ]);
 
-      if (cancelled || !res.success) {
+      if (cancelled) {
         return;
       }
 
-      const students = (res.data as UserAccessRecord[]) ?? [];
-      setAdminReportUsers(students);
-      setSelectedAdminStudentId((current) => current || String(students[0]?.id ?? ""));
+      if (studentsRes.success) {
+        const students = (studentsRes.data as UserAccessRecord[]) ?? [];
+        setAdminReportUsers(students);
+        setSelectedAdminStudentId((current) => current || String(students[0]?.id ?? ""));
+      }
+
+      if (sessionsRes.success) {
+        setAgentSessions(
+          ((sessionsRes.data as typeof agentSessions) ?? []).sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        );
+      }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [authToken, currentStep, userRole]);
+  }, [adminReportRefreshKey, authToken, currentStep, userRole]);
 
   useEffect(() => {
     if (
@@ -806,6 +842,7 @@ const Index = () => {
     setAdminReportUsers([]);
     setAdminReportSessions([]);
     setAdminReportMetrics(null);
+    setAgentSessions([]);
     setAdminReportError("");
     setSelectedAdminStudentId("");
     setOtpResendCount(0);
@@ -953,11 +990,13 @@ const Index = () => {
             <AgentPanelStep
               agentName={userName || formatDisplayName(email)}
               students={adminUsers}
+              sessions={agentSessions}
               selectedStudentId={selectedAdminStudentId}
               onSelectStudent={setSelectedAdminStudentId}
               onCreateSession={handleMode}
               onLookupSession={handleLookupAgentSession}
               onUploadAudioByCode={handleUploadAudioByCode}
+              onRefresh={() => setAdminReportRefreshKey((key) => key + 1)}
               onLogout={handleLogout}
             />
           ) : (

@@ -347,6 +347,36 @@ export function getAgentSessionByCode(token: string, sessionCode: string) {
   }>(`/api/agent/session-code/${encodeURIComponent(sessionCode)}`, token);
 }
 
+export function getAgentSessions(token: string) {
+  return getFromApi<
+    Array<{
+      id: string;
+      userId: number;
+      studentName: string;
+      studentEmail: string;
+      sessionCode: string;
+      mode: "improvisation" | "presentation";
+      difficulty: "easy" | "medium" | "hard";
+      status: "active" | "completed" | "canceled";
+      audioUrl?: string | null;
+      videoUrl?: string | null;
+      createdAt: string;
+      scheduledAt?: string;
+      fileName?: string;
+      slideCount?: number;
+      textTitle?: string;
+      promptWord?: string;
+      duration?: number | null;
+      feedback?: {
+        confidence: string;
+        audienceReaction: string;
+        improvement: string;
+        notes: string;
+      } | null;
+    }>
+  >("/api/agent/sessions", token);
+}
+
 async function postFileToApi<T>(
   path: string,
   formData: FormData,

@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { getAgentSessionByCode, listAgentStudents } from "../controllers/agentController.js";
+import {
+  getAgentSessionByCode,
+  listAgentSessions,
+  listAgentStudents,
+} from "../controllers/agentController.js";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { authenticateToken, requireAgentOrAdmin } from "../middleware/authMiddleware.js";
 
@@ -10,6 +14,13 @@ router.get(
   asyncHandler(authenticateToken),
   asyncHandler(requireAgentOrAdmin),
   asyncHandler(listAgentStudents)
+);
+
+router.get(
+  "/agent/sessions",
+  asyncHandler(authenticateToken),
+  asyncHandler(requireAgentOrAdmin),
+  asyncHandler(listAgentSessions)
 );
 
 router.get(
