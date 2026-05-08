@@ -354,13 +354,63 @@ const Index = () => {
       setSelectedAdminStudentId((current) =>
         current || String(reportUsers[0]?.id ?? "")
       );
-      setAdminReportSessions(
-        (report?.sessions ?? []).map((session) => ({
+      const reportSessions = (report?.sessions ?? []).map((session) => ({
           ...session,
           scheduledAt: session.scheduledAt ?? session.metadata?.scheduledAt,
           feedback: session.feedback ?? session.result?.feedback,
-        }))
+        }));
+      setAdminReportSessions(reportSessions);
+
+      const expectedSessionCount = reportUsers.reduce(
+        (total, user) => total + Number(user.totalSessions ?? 0),
+        0
       );
+
+      if (expectedSessionCount > reportSessions.length) {
+        const userSessionResults = await Promise.allSettled(
+          reportUsers
+            .filter((user) => user.id && Number(user.totalSessions ?? 0) > 0)
+            .map(async (user) => {
+              const userSessions = await getAdminUserSessions(authToken, user.id as number);
+
+              if (!userSessions.success) {
+                return [] as SessionRecord[];
+              }
+
+              return ((userSessions.data as Array<
+                SessionRecord & {
+                  metadata?: { scheduledAt?: string } | null;
+                  result?: { feedback?: SessionFeedback } | null;
+                }
+              >) ?? []).map((session) => ({
+                ...session,
+                scheduledAt: session.scheduledAt ?? session.metadata?.scheduledAt,
+                feedback: session.feedback ?? session.result?.feedback,
+              }));
+            })
+        );
+
+        if (cancelled) return;
+
+        const mergedSessions = userSessionResults
+          .flatMap((result) => (result.status === "fulfilled" ? result.value : []))
+          .sort(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        const dedupedSessions = Array.from(
+          new Map(
+            [...reportSessions, ...mergedSessions].map((session) => [
+              session.id,
+              session,
+            ])
+          ).values()
+        ).sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+        setAdminReportSessions(dedupedSessions);
+      }
       setAdminReportLoading(false);
     })();
 

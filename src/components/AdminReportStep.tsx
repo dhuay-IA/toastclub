@@ -511,7 +511,7 @@ const AdminReportStep = ({
                   Resumen de sesiones
                 </p>
                 <h3 className="mt-1 text-lg font-semibold text-foreground">
-                  Sesiones por fecha
+                  Actividad reciente
                 </h3>
               </div>
             </div>
