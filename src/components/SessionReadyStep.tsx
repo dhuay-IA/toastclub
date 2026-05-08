@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface SessionReadyStepProps {
   sessionCode: string;
   mode: "improvisation" | "presentation";
@@ -51,6 +53,18 @@ const SessionReadyStep = ({
   difficulty,
   onBackToDashboard,
 }: SessionReadyStepProps) => {
+  const [copied, setCopied] = useState(false);
+
+  const copySessionCode = async () => {
+    try {
+      await navigator.clipboard.writeText(sessionCode);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  };
+
   return (
     <div className="step-container py-12">
       <div className="glass-card mx-auto max-w-md p-8">
@@ -58,18 +72,27 @@ const SessionReadyStep = ({
           <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/10">
             <span className="text-2xl">VR</span>
           </div>
-          <h2 className="text-lg font-semibold text-foreground">Sesion lista</h2>
+          <h2 className="text-lg font-semibold text-foreground">Sesión lista</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            La práctica ya quedó registrada. El acceso a VR se gestiona internamente.
+            La práctica ya quedó registrada. Presenta este código en el local para que el encargado ubique la sesión.
           </p>
         </div>
 
         <div className="mb-8 space-y-3">
-          <div className="flex justify-between border-b border-border/50 py-2 text-sm">
-            <span className="text-muted-foreground">Código de sesión</span>
-            <span className="whitespace-nowrap text-sm font-semibold tracking-[0.18em] text-foreground">
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              Código de sesión
+            </p>
+            <p className="mt-2 font-mono text-2xl font-bold tracking-[0.18em] text-primary">
               {sessionCode}
-            </span>
+            </p>
+            <button
+              type="button"
+              onClick={() => void copySessionCode()}
+              className="mt-3 rounded-lg border border-primary/25 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary transition-colors hover:bg-primary/10"
+            >
+              {copied ? "Copiado" : "Copiar código"}
+            </button>
           </div>
           <div className="flex justify-between border-b border-border/50 py-2 text-sm">
             <span className="text-muted-foreground">Modo</span>
@@ -92,9 +115,9 @@ const SessionReadyStep = ({
 
           {mode === "presentation" && (
             <>
-              <div className="flex justify-between border-b border-border/50 py-2 text-sm">
+              <div className="flex justify-between gap-4 border-b border-border/50 py-2 text-sm">
                 <span className="text-muted-foreground">Archivo</span>
-                <span className="text-sm text-foreground">{fileName}</span>
+                <span className="text-right text-sm text-foreground">{fileName}</span>
               </div>
               <div className="flex justify-between border-b border-border/50 py-2 text-sm">
                 <span className="text-muted-foreground">Diapositivas</span>
@@ -117,7 +140,7 @@ const SessionReadyStep = ({
               </div>
               {promptWord ? (
                 <div className="flex justify-between border-b border-border/50 py-2 text-sm">
-                  <span className="text-muted-foreground">Palabra guia</span>
+                  <span className="text-muted-foreground">Palabra guía</span>
                   <span className="text-sm text-foreground">{promptWord}</span>
                 </div>
               ) : null}
@@ -152,8 +175,8 @@ const SessionReadyStep = ({
 
         <p className="mt-4 text-center text-xs text-muted-foreground">
           {mode === "presentation"
-            ? "Tu presentación quedó lista y la información de la sesión puede enviarse por los canales internos definidos por el equipo."
-            : "El tema fue registrado y la información de la sesión puede enviarse por los canales internos definidos por el equipo."}
+            ? "La presentación quedó convertida a imágenes y lista para ser consultada con el código de sesión."
+            : "El tema quedó registrado y listo para ser consultado con el código de sesión."}
         </p>
 
         {mode === "presentation" && slideImages && slideImages.length > 0 ? (

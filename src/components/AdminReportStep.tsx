@@ -156,6 +156,9 @@ const AdminReportStep = ({
   >([]);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
+  const [sessionModeFilter, setSessionModeFilter] = useState<"all" | "improvisation" | "presentation">("all");
+  const [sessionStatusFilter, setSessionStatusFilter] = useState<"all" | "active" | "completed" | "canceled">("all");
   const totalStudents = metrics?.totalStudents ?? users.length;
   const totalSessions = metrics?.totalSessions ?? sessions.length;
   const improvSessions =
@@ -196,6 +199,16 @@ const AdminReportStep = ({
         user.totalSessions ?? sessions.filter((session) => session.email === user.email).length,
     }))
     .sort((a, b) => b.totalSessions - a.totalSessions || b.lastSeenAt.localeCompare(a.lastSeenAt));
+  const filteredTopUsers = topUsers.filter((user) => {
+    const query = studentSearch.trim().toLowerCase();
+    if (!query) return true;
+    return user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query);
+  });
+  const filteredSessions = sessions.filter((session) => {
+    const matchesMode = sessionModeFilter === "all" || session.mode === sessionModeFilter;
+    const matchesStatus = sessionStatusFilter === "all" || (session.status ?? "active") === sessionStatusFilter;
+    return matchesMode && matchesStatus;
+  });
   const selectedUser = topUsers.find((user) => user.email === selectedUserEmail) ?? null;
   const selectedUserId = selectedUser?.id ? String(selectedUser.id) : "";
   const selectedUserEmailNormalized = selectedUser?.email.trim().toLowerCase() ?? "";
@@ -442,10 +455,17 @@ const AdminReportStep = ({
                 </h3>
               </div>
             </div>
+            <input
+              type="search"
+              value={studentSearch}
+              onChange={(event) => setStudentSearch(event.target.value)}
+              placeholder="Buscar alumno por nombre o correo..."
+              className="mt-5 w-full rounded-xl border border-border bg-white px-4 py-3 text-sm text-foreground outline-none transition-colors focus:border-secondary"
+            />
 
-            {topUsers.length > 0 ? (
+            {filteredTopUsers.length > 0 ? (
               <div className="mt-5 space-y-4">
-                {topUsers.map((user) => (
+                {filteredTopUsers.map((user) => (
                   <article
                     key={user.email}
                     className="rounded-2xl border border-border/70 bg-white/75 p-5"
@@ -496,9 +516,35 @@ const AdminReportStep = ({
               </div>
             </div>
 
-            {sessions.length > 0 ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <select
+                value={sessionModeFilter}
+                onChange={(event) =>
+                  setSessionModeFilter(event.target.value as typeof sessionModeFilter)
+                }
+                className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+              >
+                <option value="all">Todos los modos</option>
+                <option value="improvisation">Improvisación</option>
+                <option value="presentation">Presentación</option>
+              </select>
+              <select
+                value={sessionStatusFilter}
+                onChange={(event) =>
+                  setSessionStatusFilter(event.target.value as typeof sessionStatusFilter)
+                }
+                className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+              >
+                <option value="all">Todos los estados</option>
+                <option value="active">Vigentes</option>
+                <option value="completed">Completadas</option>
+                <option value="canceled">Canceladas</option>
+              </select>
+            </div>
+
+            {filteredSessions.length > 0 ? (
               <div className="mt-5 space-y-4">
-                {sessions.map((session) => (
+                {filteredSessions.map((session) => (
                   <article
                     key={session.id}
                     className="rounded-2xl border border-border/70 bg-white/75 p-5"
@@ -688,6 +734,17 @@ const AdminReportStep = ({
                           {session.feedback ? "Feedback registrado" : "Feedback pendiente"}
                         </span>
                       </div>
+                      {session.feedback ? (
+                        <div className="mt-3 rounded-xl bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+                          <p className="font-semibold text-foreground">Resumen de feedback</p>
+                          {session.feedback.confidence ? (
+                            <p className="mt-1">Confianza: {session.feedback.confidence}</p>
+                          ) : null}
+                          {session.feedback.improvement ? (
+                            <p className="mt-1">Mejora: {session.feedback.improvement}</p>
+                          ) : null}
+                        </div>
+                      ) : null}
                     </article>
                   ))}
                 </div>

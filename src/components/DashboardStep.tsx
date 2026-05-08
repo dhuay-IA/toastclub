@@ -3,6 +3,7 @@ import {
   BarChart3,
   ChartColumnBig,
   CheckCircle2,
+  CalendarClock,
   Headphones,
   History,
   LayoutDashboard,
@@ -145,6 +146,12 @@ const DashboardStep = ({
       | undefined) ?? "medium";
   const feedbackPercent = getPercent(feedbackCount, activeSessions.length);
   const audioPercent = getPercent(audioCount, activeSessions.length);
+  const upcomingSession = [...activeSessions]
+    .filter((session) => session.scheduledAt && new Date(session.scheduledAt).getTime() >= Date.now())
+    .sort((a, b) => new Date(a.scheduledAt ?? "").getTime() - new Date(b.scheduledAt ?? "").getTime())[0];
+  const latestFeedbackSession = activeSessions.find((session) => feedbackComplete(session.feedback));
+  const latestSessions = activeSessions.slice(0, 5);
+  const pendingAudioCount = activeSessions.length - audioCount;
 
   if (isAdmin && onOpenAdminReport) {
     return (
@@ -466,6 +473,72 @@ const DashboardStep = ({
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center gap-3">
+                <CalendarClock className="h-4 w-4 text-secondary" />
+                <p className="text-sm font-semibold text-foreground">
+                  Próxima práctica
+                </p>
+              </div>
+              {upcomingSession ? (
+                <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+                  <p className="font-semibold text-foreground">
+                    {upcomingSession.mode === "improvisation" ? "Improvisación" : "Presentación"}
+                  </p>
+                  <p>{formatScheduledDate(upcomingSession.scheduledAt)}</p>
+                  {upcomingSession.sessionCode ? (
+                    <p className="font-mono text-xs font-semibold text-primary">
+                      {upcomingSession.sessionCode}
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  No tienes una práctica futura programada. Crea una nueva sesión cuando quieras entrenar.
+                </p>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-foreground">
+                  Avance reciente
+                </p>
+                <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {pendingAudioCount} audios pendientes
+                </span>
+              </div>
+              {latestSessions.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {latestSessions.map((session) => (
+                    <div
+                      key={`timeline-${session.id}`}
+                      className="grid grid-cols-[auto_1fr_auto] items-center gap-3 text-sm"
+                    >
+                      <span className="h-2.5 w-2.5 rounded-full bg-secondary" />
+                      <span className="truncate text-muted-foreground">
+                        {session.mode === "improvisation" ? "Improvisación" : "Presentación"} · {formatSessionDate(session.createdAt)}
+                      </span>
+                      <span className="text-xs font-semibold text-muted-foreground">
+                        {feedbackComplete(session.feedback) ? "Feedback" : getAudioUrl(session) ? "Audio" : "Pendiente"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  Tus avances aparecerán aquí cuando tengas sesiones registradas.
+                </p>
+              )}
+              {latestFeedbackSession?.feedback?.improvement ? (
+                <p className="mt-4 rounded-xl bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
+                  Último foco de mejora: {latestFeedbackSession.feedback.improvement}
+                </p>
+              ) : null}
             </div>
           </div>
         </section>

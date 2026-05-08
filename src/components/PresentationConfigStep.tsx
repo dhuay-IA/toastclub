@@ -57,6 +57,11 @@ const PresentationConfigStep = ({
     return String(Number(numericValue));
   };
 
+  const clampMinutes = (value: string) => {
+    const numericValue = Number(value || "10");
+    return String(Math.min(Math.max(numericValue, 1), 120));
+  };
+
   const formatSize = (bytes: number) => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
@@ -104,6 +109,10 @@ const PresentationConfigStep = ({
           ? await convertPdfFileToImages(selected)
           : await convertPresentationFileToImages(selected);
 
+      if (images.length === 0) {
+        throw new Error("No se pudieron generar imágenes desde el archivo.");
+      }
+
       setSlideImages(images);
       setSlideCount(images.length);
       setProcessed(true);
@@ -122,12 +131,12 @@ const PresentationConfigStep = ({
   };
 
   const handleSubmit = () => {
-    if (!file || !processed) return;
+    if (!file || !processed || slideCount === 0) return;
 
     onComplete({
       fileName: file.name,
       fileSize: formatSize(file.size),
-      totalMinutes: Number(minutes),
+      totalMinutes: Number(clampMinutes(minutes)),
       slideCount,
       slideImages,
       scheduledAt: new Date(scheduledAt).toISOString(),
@@ -138,13 +147,13 @@ const PresentationConfigStep = ({
     <div className="step-container py-12">
       <div className="max-w-3xl mx-auto">
         <h2 className="mb-6 text-center text-lg font-semibold text-foreground">
-          Sube tu presentacion
+          Sube tu presentación
         </h2>
 
         {isAdmin ? (
           <div className="mb-6 rounded-xl border border-border/70 bg-white/80 p-4">
             <label className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Alumno para esta sesion
+              Alumno para esta sesión
             </label>
             <select
               value={selectedAdminStudentId}
@@ -159,7 +168,7 @@ const PresentationConfigStep = ({
               ))}
             </select>
             <p className="mt-2 text-xs text-muted-foreground">
-              Esta presentacion aparecera en el registro del alumno elegido.
+              Esta presentación aparecerá en el registro del alumno elegido.
             </p>
           </div>
         ) : null}
@@ -185,7 +194,7 @@ const PresentationConfigStep = ({
                 Seleccionar archivo
               </div>
               <div className="mt-1 text-xs text-muted-foreground/60">
-                PDF, PPT o PPTX - Max. 50MB
+                PDF, PPT o PPTX - Máx. 50MB
               </div>
             </button>
           ) : (
@@ -198,17 +207,17 @@ const PresentationConfigStep = ({
                 <div className="flex items-center gap-3">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-secondary border-t-transparent" />
                   <span className="text-sm text-muted-foreground">
-                    Preparando tu presentacion...
+                    Preparando la secuencia de imágenes...
                   </span>
                 </div>
               ) : (
                 <>
                   <div className="flex items-center gap-2 text-sm font-medium text-secondary">
                     <span>OK</span>
-                    <span>Presentacion lista</span>
+                    <span>Presentación lista</span>
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {file.name} - {formatSize(file.size)} - {slideCount} diapositivas
+                    {file.name} - {formatSize(file.size)} - {slideCount} diapositivas convertidas
                   </div>
                 </>
               )}
@@ -230,7 +239,7 @@ const PresentationConfigStep = ({
         {processed && (
           <div className="mb-6">
             <label className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Tiempo total de exposicion
+              Tiempo total de exposición
             </label>
             <div className="flex items-center gap-4">
               <input
@@ -242,14 +251,16 @@ const PresentationConfigStep = ({
                 onBlur={() => {
                   if (!minutes) {
                     setMinutes("10");
+                    return;
                   }
+                  setMinutes(clampMinutes(minutes));
                 }}
                 className="input-field w-24 text-center font-mono"
               />
               <span className="text-sm text-muted-foreground">minutos</span>
             </div>
             <p className="mt-2 text-xs text-muted-foreground/60">
-              La sesion finalizara automaticamente al cumplirse este tiempo.
+              La sesión finalizará automáticamente al cumplirse este tiempo.
             </p>
           </div>
         )}
@@ -257,7 +268,7 @@ const PresentationConfigStep = ({
         {processed && (
           <div className="mb-8">
             <label className="mb-3 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Fecha y hora de practica
+              Fecha y hora de práctica
             </label>
             <input
               type="datetime-local"
@@ -296,7 +307,7 @@ const PresentationConfigStep = ({
 
         <button
           onClick={handleSubmit}
-          disabled={!processed || !scheduledAt || (isAdmin && !selectedAdminStudentId)}
+          disabled={!processed || slideCount === 0 || !scheduledAt || (isAdmin && !selectedAdminStudentId)}
           className="btn-primary w-full"
         >
           CONTINUAR

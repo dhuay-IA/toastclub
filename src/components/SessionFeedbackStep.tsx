@@ -76,6 +76,11 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
   }, [session]);
 
   const audioUrl = session.audioUrl ?? session.videoUrl ?? null;
+  const canSaveFeedback = Boolean(
+    feedback.confidence.trim() &&
+    feedback.audienceReaction.trim() &&
+    feedback.improvement.trim()
+  );
 
   return (
     <div className="w-full max-w-5xl mx-auto px-6 py-10 lg:px-8">
@@ -97,8 +102,7 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
               Feedback de la sesión
             </h2>
             <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/85">
-              Revisa el audio, responde el formulario y guarda observaciones útiles para
-              tu siguiente práctica.
+              Registra tu autoevaluación después de practicar. Esto alimenta tu progreso y el reporte del administrador.
             </p>
           </div>
 
@@ -168,6 +172,9 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
               <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
                 Formulario de feedback
               </p>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                Completa los tres primeros campos para cerrar el feedback de esta sesión.
+              </p>
 
               <div className="mt-4 space-y-5">
                 {feedbackFields.map((field) => (
@@ -194,7 +201,8 @@ const SessionFeedbackStep = ({ session, onBack, onSave }: SessionFeedbackStepPro
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => onSave(session.id, feedback)}
-                  className="btn-primary"
+                  disabled={!canSaveFeedback}
+                  className="btn-primary disabled:pointer-events-none disabled:opacity-50"
                 >
                   Guardar formulario
                 </button>
