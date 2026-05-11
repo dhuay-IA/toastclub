@@ -1,4 +1,4 @@
-const GAS_URL = import.meta.env.VITE_GAS_URL as string | undefined;
+﻿const GAS_URL = import.meta.env.VITE_GAS_URL as string | undefined;
 const API_URL = import.meta.env.VITE_API_URL as string | undefined;
 
 export type AuthResponse = {
@@ -20,6 +20,14 @@ type ApiEnvelope<T> = {
   message?: string;
   data?: T;
 };
+
+export type SessionStatus =
+  | "scheduled"
+  | "active"
+  | "in_progress"
+  | "completed"
+  | "canceled"
+  | "no_show";
 
 const isConfiguredUrl = (value?: string) =>
   Boolean(value && !value.includes("YOUR_SCRIPT_ID") && !value.includes("YOUR_API_URL"));
@@ -288,7 +296,7 @@ export function getAdminReport(token: string) {
       difficulty: "easy" | "medium" | "hard";
       scheduledAt?: string;
       createdAt: string;
-      status?: "active" | "completed" | "canceled";
+      status?: SessionStatus;
       metadata?: {
         scheduledAt?: string;
       } | null;
@@ -326,7 +334,7 @@ export function getAgentSessionByCode(token: string, sessionCode: string) {
     sessionCode: string;
     mode: "improvisation" | "presentation";
     difficulty: "easy" | "medium" | "hard";
-    status: "active" | "completed" | "canceled";
+    status: SessionStatus;
     audioUrl?: string | null;
     videoUrl?: string | null;
     createdAt: string;
@@ -357,7 +365,7 @@ export function getAgentSessions(token: string) {
       sessionCode: string;
       mode: "improvisation" | "presentation";
       difficulty: "easy" | "medium" | "hard";
-      status: "active" | "completed" | "canceled";
+      status: SessionStatus;
       audioUrl?: string | null;
       videoUrl?: string | null;
       createdAt: string;
@@ -437,7 +445,7 @@ export function getAdminUserSessions(token: string, userId: number | string) {
       difficulty: "easy" | "medium" | "hard";
       scheduledAt?: string;
       createdAt: string;
-      status?: "active" | "completed" | "canceled";
+      status?: SessionStatus;
       audioUrl?: string | null;
       videoUrl?: string | null;
       metadata?: {
@@ -473,7 +481,7 @@ export function getVrSessions(token: string) {
       sessionCode: string;
       vrApp: "presentation" | "improvisation";
       scenarioKey: string;
-      status: "active" | "completed" | "canceled";
+      status: SessionStatus;
       metadata: {
         difficulty?: "easy" | "medium" | "hard";
         duration?: number;
@@ -525,7 +533,7 @@ export function createVrSession(
     sessionCode: string;
     vrApp: "presentation" | "improvisation";
     scenarioKey: string;
-    status: "active" | "completed" | "canceled";
+    status: SessionStatus;
     metadata: {
       difficulty: "easy" | "medium" | "hard";
       duration?: number;
@@ -551,7 +559,7 @@ export function cancelVrSession(token: string, sessionId: string) {
     sessionCode: string;
     vrApp: "presentation" | "improvisation";
     scenarioKey: string;
-    status: "active" | "completed" | "canceled";
+    status: SessionStatus;
     createdAt: string;
   }>(`/api/vr/session/${sessionId}/cancel`, token, {});
 }
@@ -569,7 +577,7 @@ export function saveVrSessionFeedback(
   return postToAuthenticatedApi<{
     id: number;
     sessionCode: string;
-    status: "active" | "completed" | "canceled";
+    status: SessionStatus;
     result?: {
       feedback?: typeof feedback;
       feedbackUpdatedAt?: string;
@@ -589,10 +597,42 @@ export function uploadVrSessionAudioByCode(
   return postFileToApi<{
     id: number;
     sessionCode: string;
-    status: "active" | "completed" | "canceled";
+    status: SessionStatus;
     audioUrl?: string | null;
     videoUrl?: string | null;
     videoUploadedAt?: string | null;
     updatedAt: string;
   }>(`/api/vr/session-code/${encodeURIComponent(sessionCode)}/audio`, formData, token);
+}
+
+export function updateAdminSessionStatus(
+  token: string,
+  sessionId: string,
+  status: SessionStatus
+) {
+  return postToAuthenticatedApi(`/api/admin/sessions/${sessionId}/status`, token, { status });
+}
+
+export function rescheduleAdminSession(
+  token: string,
+  sessionId: string,
+  scheduledAt: string
+) {
+  return postToAuthenticatedApi(`/api/admin/sessions/${sessionId}/reschedule`, token, { scheduledAt });
+}
+
+export function updateAgentSessionStatus(
+  token: string,
+  sessionId: string,
+  status: SessionStatus
+) {
+  return postToAuthenticatedApi(`/api/agent/sessions/${sessionId}/status`, token, { status });
+}
+
+export function rescheduleAgentSession(
+  token: string,
+  sessionId: string,
+  scheduledAt: string
+) {
+  return postToAuthenticatedApi(`/api/agent/sessions/${sessionId}/reschedule`, token, { scheduledAt });
 }

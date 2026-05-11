@@ -133,7 +133,7 @@ const initializeDatabase = async () => {
 
   await pool.query(`
     ALTER TABLE vr_sessions
-    MODIFY COLUMN status ENUM('active', 'completed', 'canceled') NOT NULL DEFAULT 'active'
+    MODIFY COLUMN status ENUM('scheduled', 'active', 'in_progress', 'completed', 'canceled', 'no_show') NOT NULL DEFAULT 'scheduled'
   `);
 
   await addIndexIfMissing("users", "users_role_id_idx", "(role, id)");

@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useState } from "react";
+import type { SessionStatus } from "@/lib/auth";
 
 type AgentStudent = {
   id?: number;
@@ -25,7 +26,7 @@ type AgentSessionLookup = {
   sessionCode: string;
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
-  status: "active" | "completed" | "canceled";
+  status: SessionStatus;
   audioUrl?: string | null;
   videoUrl?: string | null;
   createdAt: string;
@@ -46,6 +47,8 @@ type AgentPanelStepProps = {
   onCreateSession: (mode: "improvisation" | "presentation") => void;
   onLookupSession: (sessionCode: string) => Promise<AgentSessionLookup>;
   onUploadAudioByCode: (sessionCode: string, file: File) => Promise<void>;
+  onUpdateSessionStatus: (sessionId: string, status: SessionStatus) => Promise<void>;
+  onRescheduleSession: (sessionId: string, scheduledAt: string) => Promise<void>;
   onRefresh: () => void;
   onLogout: () => void;
 };
@@ -54,6 +57,15 @@ const difficultyLabels = {
   easy: "Fácil",
   medium: "Medio",
   hard: "Difícil",
+};
+
+const statusLabels: Record<SessionStatus, string> = {
+  scheduled: "Programada",
+  active: "Vigente",
+  in_progress: "En atención",
+  completed: "Finalizada",
+  canceled: "Cancelada",
+  no_show: "No asistió",
 };
 
 const formatDate = (value?: string) =>
@@ -73,6 +85,8 @@ const AgentPanelStep = ({
   onCreateSession,
   onLookupSession,
   onUploadAudioByCode,
+  onUpdateSessionStatus,
+  onRescheduleSession,
   onRefresh,
   onLogout,
 }: AgentPanelStepProps) => {
@@ -80,6 +94,7 @@ const AgentPanelStep = ({
   const [lookup, setLookup] = useState<AgentSessionLookup | null>(null);
   const [lookupError, setLookupError] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [rescheduleValues, setRescheduleValues] = useState<Record<string, string>>({});
   const selectedStudent = students.find((student) => String(student.id ?? "") === selectedStudentId);
 
   const handleLookup = async () => {
@@ -186,7 +201,9 @@ const AgentPanelStep = ({
                       </p>
                     </div>
                     <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      {lookup.status === "canceled" ? "Cancelada" : difficultyLabels[lookup.difficulty]}
+                      {lookup.status === "canceled" || lookup.status === "no_show"
+                        ? statusLabels[lookup.status]
+                        : difficultyLabels[lookup.difficulty]}
                     </span>
                   </div>
                   <div className="mt-4 grid gap-2 text-sm text-muted-foreground sm:grid-cols-2">
@@ -235,6 +252,24 @@ const AgentPanelStep = ({
                       )}
                       {lookup.status === "canceled" ? "No usar" : "Lista para atención"}
                     </span>
+                    <button
+                      onClick={() => void onUpdateSessionStatus(lookup.id, "in_progress")}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                    >
+                      En atención
+                    </button>
+                    <button
+                      onClick={() => void onUpdateSessionStatus(lookup.id, "completed")}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                    >
+                      Finalizar
+                    </button>
+                    <button
+                      onClick={() => void onUpdateSessionStatus(lookup.id, "no_show")}
+                      className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:border-destructive"
+                    >
+                      No asistió
+                    </button>
                   </div>
                 </article>
               ) : null}
@@ -334,7 +369,9 @@ const AgentPanelStep = ({
                       </p>
                     </div>
                     <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                      {session.status === "canceled" ? "Cancelada" : difficultyLabels[session.difficulty]}
+                      {session.status === "canceled" || session.status === "no_show"
+                        ? statusLabels[session.status]
+                        : difficultyLabels[session.difficulty]}
                     </span>
                   </div>
 
@@ -381,6 +418,49 @@ const AgentPanelStep = ({
                     <span className="rounded-lg border border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
                       {session.feedback ? "Feedback registrado" : "Feedback pendiente"}
                     </span>
+                    <button
+                      onClick={() => void onUpdateSessionStatus(session.id, "in_progress")}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                    >
+                      En atención
+                    </button>
+                    <button
+                      onClick={() => void onUpdateSessionStatus(session.id, "completed")}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                    >
+                      Finalizar
+                    </button>
+                    <button
+                      onClick={() => void onUpdateSessionStatus(session.id, "no_show")}
+                      className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:border-destructive"
+                    >
+                      No asistió
+                    </button>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                    <input
+                      type="datetime-local"
+                      value={rescheduleValues[session.id] ?? ""}
+                      onChange={(event) =>
+                        setRescheduleValues((current) => ({
+                          ...current,
+                          [session.id]: event.target.value,
+                        }))
+                      }
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+                    />
+                    <button
+                      onClick={() => {
+                        const nextValue = rescheduleValues[session.id];
+                        if (nextValue) {
+                          void onRescheduleSession(session.id, new Date(nextValue).toISOString());
+                        }
+                      }}
+                      disabled={!rescheduleValues[session.id]}
+                      className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      Reprogramar
+                    </button>
                   </div>
                 </article>
               ))}

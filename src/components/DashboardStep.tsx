@@ -25,7 +25,7 @@ export type SessionSummary = {
   sessionCode?: string;
   mode: "improvisation" | "presentation";
   difficulty: "easy" | "medium" | "hard";
-  status?: "active" | "completed" | "canceled";
+  status?: "scheduled" | "active" | "in_progress" | "completed" | "canceled" | "no_show";
   createdAt: string;
   scheduledAt?: string;
   audioUrl?: string | null;
@@ -59,6 +59,15 @@ const difficultyLabels = {
   easy: "Fácil",
   medium: "Medio",
   hard: "Difícil",
+};
+
+export const sessionStatusLabels = {
+  scheduled: "Programada",
+  active: "Vigente",
+  in_progress: "En atención",
+  completed: "Finalizada",
+  canceled: "Cancelada",
+  no_show: "No asistió",
 };
 
 const modeCards = [
@@ -115,7 +124,7 @@ const DashboardStep = ({
   isAdmin = false,
 }: DashboardStepProps) => {
   const activeSessions = sessionHistory.filter(
-    (session) => session.status !== "canceled"
+    (session) => session.status !== "canceled" && session.status !== "no_show"
   );
   const feedbackCount = activeSessions.filter((session) =>
     feedbackComplete(session.feedback)
@@ -778,7 +787,9 @@ const DashboardStep = ({
                         ? "bg-destructive/10 text-destructive"
                         : "bg-muted text-muted-foreground"
                     }`}>
-                      {session.status === "canceled" ? "Cancelada" : difficultyLabels[session.difficulty]}
+                      {session.status === "canceled" || session.status === "no_show"
+                        ? sessionStatusLabels[session.status]
+                        : difficultyLabels[session.difficulty]}
                     </span>
                   </div>
 

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { SessionSummary } from "@/components/DashboardStep";
+import { sessionStatusLabels } from "@/components/DashboardStep";
+import type { SessionStatus } from "@/lib/auth";
 
 type AdminUserRecord = {
   id?: number;
@@ -38,6 +40,8 @@ type AdminReportStepProps = {
     session: SessionSummary & { userId?: number; email: string; name?: string },
     file: File
   ) => Promise<void>;
+  onUpdateSessionStatus?: (sessionId: string, status: SessionStatus) => Promise<void>;
+  onRescheduleSession?: (sessionId: string, scheduledAt: string) => Promise<void>;
   onRefresh: () => void;
   onBack: () => void;
   onLogout: () => void;
@@ -157,6 +161,8 @@ const AdminReportStep = ({
   dataSourceLabel = "servidor",
   onLoadUserSessions,
   onUploadAudio,
+  onUpdateSessionStatus,
+  onRescheduleSession,
   onRefresh,
   onBack,
   onLogout,
@@ -169,7 +175,8 @@ const AdminReportStep = ({
   const [detailError, setDetailError] = useState("");
   const [studentSearch, setStudentSearch] = useState("");
   const [sessionModeFilter, setSessionModeFilter] = useState<"all" | "improvisation" | "presentation">("all");
-  const [sessionStatusFilter, setSessionStatusFilter] = useState<"all" | "active" | "completed" | "canceled">("all");
+  const [sessionStatusFilter, setSessionStatusFilter] = useState<"all" | SessionStatus>("all");
+  const [rescheduleValues, setRescheduleValues] = useState<Record<string, string>>({});
   const [sessionFromDate, setSessionFromDate] = useState("");
   const [sessionToDate, setSessionToDate] = useState("");
   const computedImprovSessions = sessions.filter((session) => session.mode === "improvisation").length;
@@ -254,6 +261,10 @@ const AdminReportStep = ({
     [selectedUser, selectedUserEmailNormalized, selectedUserId, sessions]
   );
   const detailSessions = loadedUserSessions.length > 0 ? loadedUserSessions : selectedUserSessions;
+  const detailAudioCount = detailSessions.filter((session) => session.audioUrl ?? session.videoUrl).length;
+  const detailFeedbackCount = detailSessions.filter((session) => session.feedback).length;
+  const detailCanceledCount = detailSessions.filter((session) => session.status === "canceled").length;
+  const detailNoShowCount = detailSessions.filter((session) => session.status === "no_show").length;
 
   const openUserSessions = async (user: AdminUserRecord) => {
     setSelectedUserEmail(user.email);
@@ -558,9 +569,12 @@ const AdminReportStep = ({
                 className="rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground outline-none transition-colors focus:border-secondary"
               >
                 <option value="all">Todos los estados</option>
+                <option value="scheduled">Programadas</option>
                 <option value="active">Vigentes</option>
+                <option value="in_progress">En atención</option>
                 <option value="completed">Completadas</option>
                 <option value="canceled">Canceladas</option>
+                <option value="no_show">No asistió</option>
               </select>
               <input
                 type="date"
@@ -604,7 +618,9 @@ const AdminReportStep = ({
                           ? "bg-destructive/10 text-destructive"
                           : "bg-muted text-muted-foreground"
                       }`}>
-                        {session.status === "canceled" ? "Cancelada" : difficultyLabels[session.difficulty]}
+                        {session.status === "canceled" || session.status === "no_show"
+                          ? sessionStatusLabels[session.status]
+                          : difficultyLabels[session.difficulty]}
                       </span>
                     </div>
                     <p className="mt-3 text-sm text-muted-foreground">
@@ -652,6 +668,28 @@ const AdminReportStep = ({
                       <span className="rounded-lg border border-border bg-white/70 px-3 py-2 text-xs font-semibold text-muted-foreground">
                         {session.feedback ? "Feedback registrado" : "Feedback pendiente"}
                       </span>
+                      {onUpdateSessionStatus ? (
+                        <>
+                          <button
+                            onClick={() => void onUpdateSessionStatus(session.id, "in_progress")}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                          >
+                            En atención
+                          </button>
+                          <button
+                            onClick={() => void onUpdateSessionStatus(session.id, "completed")}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                          >
+                            Finalizar
+                          </button>
+                          <button
+                            onClick={() => void onUpdateSessionStatus(session.id, "no_show")}
+                            className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:border-destructive"
+                          >
+                            No asistió
+                          </button>
+                        </>
+                      ) : null}
                     </div>
                   </article>
                 ))}
@@ -726,7 +764,23 @@ const AdminReportStep = ({
                   </p>
                 </div>
               ) : detailSessions.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-5">
+                    {[
+                      ["Sesiones", detailSessions.length],
+                      ["Audios", detailAudioCount],
+                      ["Feedback", detailFeedbackCount],
+                      ["Canceladas", detailCanceledCount],
+                      ["No asistió", detailNoShowCount],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-xl bg-muted/60 p-3">
+                        <p className="text-xl font-bold text-foreground">{value}</p>
+                        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                          {label}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                   {detailSessions.map((session) => (
                     <article
                       key={session.id}
@@ -748,6 +802,8 @@ const AdminReportStep = ({
                         <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                           {session.status === "canceled"
                             ? "Cancelada"
+                            : session.status === "no_show"
+                              ? "No asistió"
                             : difficultyLabels[session.difficulty]}
                         </span>
                       </div>
@@ -760,7 +816,7 @@ const AdminReportStep = ({
                             ? "Improvisacion"
                             : "Presentacion"}
                         </p>
-                        <p>Estado: {session.status ?? "active"}</p>
+                        <p>Estado: {sessionStatusLabels[session.status ?? "active"]}</p>
                       </div>
                       <p className="mt-3 text-sm text-muted-foreground">
                         {session.mode === "improvisation"
@@ -802,6 +858,53 @@ const AdminReportStep = ({
                           {session.feedback ? "Feedback registrado" : "Feedback pendiente"}
                         </span>
                       </div>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                        <input
+                          type="datetime-local"
+                          value={rescheduleValues[session.id] ?? ""}
+                          onChange={(event) =>
+                            setRescheduleValues((current) => ({
+                              ...current,
+                              [session.id]: event.target.value,
+                            }))
+                          }
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground outline-none transition-colors focus:border-secondary"
+                        />
+                        <button
+                          onClick={() => {
+                            const nextValue = rescheduleValues[session.id];
+                            if (nextValue && onRescheduleSession) {
+                              void onRescheduleSession(session.id, new Date(nextValue).toISOString());
+                            }
+                          }}
+                          disabled={!rescheduleValues[session.id] || !onRescheduleSession}
+                          className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary disabled:pointer-events-none disabled:opacity-50"
+                        >
+                          Reprogramar
+                        </button>
+                      </div>
+                      {onUpdateSessionStatus ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => void onUpdateSessionStatus(session.id, "in_progress")}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                          >
+                            En atención
+                          </button>
+                          <button
+                            onClick={() => void onUpdateSessionStatus(session.id, "completed")}
+                            className="rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground transition-colors hover:border-secondary hover:text-secondary"
+                          >
+                            Finalizar
+                          </button>
+                          <button
+                            onClick={() => void onUpdateSessionStatus(session.id, "no_show")}
+                            className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:border-destructive"
+                          >
+                            No asistió
+                          </button>
+                        </div>
+                      ) : null}
                       {session.feedback ? (
                         <div className="mt-3 rounded-xl bg-muted/60 px-4 py-3 text-sm text-muted-foreground">
                           <p className="font-semibold text-foreground">Resumen de feedback</p>

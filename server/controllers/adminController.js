@@ -4,6 +4,11 @@ import {
   listAdminReportSessions,
 } from "../models/adminModel.js";
 import { listVrSessionsByUser } from "../models/vrSessionModel.js";
+import {
+  findVrSessionById,
+  updateVrSessionMetadata,
+  updateVrSessionStatus,
+} from "../models/vrSessionModel.js";
 import { findUserById, listUsersForAdminReport } from "../models/userModel.js";
 
 const parseJsonColumn = (value) => {
@@ -16,6 +21,15 @@ const parseJsonColumn = (value) => {
     return null;
   }
 };
+
+const allowedOperationalStatuses = new Set([
+  "scheduled",
+  "active",
+  "in_progress",
+  "completed",
+  "canceled",
+  "no_show",
+]);
 
 const serializeAdminSession = (session) => {
   const metadata = parseJsonColumn(session.metadata_json);
@@ -130,5 +144,77 @@ export const getAdminUserSessions = async (req, res) => {
         name: user.name,
       })
     ),
+  });
+};
+
+export const updateAdminSessionStatus = async (req, res) => {
+  const sessionId = Number(req.params.sessionId);
+  const status = String(req.body.status || "").trim();
+
+  if (!Number.isInteger(sessionId) || sessionId <= 0 || !allowedOperationalStatuses.has(status)) {
+    return res.status(400).json({
+      success: false,
+      message: "Estado de sesion no valido.",
+    });
+  }
+
+  const session = await updateVrSessionStatus({ sessionId, status });
+
+  if (!session) {
+    return res.status(404).json({
+      success: false,
+      message: "No se encontro la sesion.",
+    });
+  }
+
+  const user = await findUserById(session.user_id);
+
+  return res.status(200).json({
+    success: true,
+    data: serializeAdminSession({
+      ...session,
+      email: user?.email ?? "",
+      name: user?.name ?? "",
+    }),
+  });
+};
+
+export const rescheduleAdminSession = async (req, res) => {
+  const sessionId = Number(req.params.sessionId);
+  const scheduledAt = String(req.body.scheduledAt || "").trim();
+
+  if (!Number.isInteger(sessionId) || sessionId <= 0 || !scheduledAt) {
+    return res.status(400).json({
+      success: false,
+      message: "Fecha de reprogramacion no valida.",
+    });
+  }
+
+  const existingSession = await findVrSessionById(sessionId);
+
+  if (!existingSession) {
+    return res.status(404).json({
+      success: false,
+      message: "No se encontro la sesion.",
+    });
+  }
+
+  const metadata = {
+    ...(parseJsonColumn(existingSession.metadata_json) ?? {}),
+    scheduledAt,
+    rescheduledAt: new Date().toISOString(),
+    rescheduledById: req.user.id,
+    rescheduledByRole: req.user.role,
+  };
+  const session = await updateVrSessionMetadata({ sessionId, metadata });
+  const user = await findUserById(session.user_id);
+
+  return res.status(200).json({
+    success: true,
+    data: serializeAdminSession({
+      ...session,
+      email: user?.email ?? "",
+      name: user?.name ?? "",
+    }),
   });
 };

@@ -9,7 +9,7 @@ const buildPendingSessionCode = () =>
 export const createVrSession = async ({ userId, vrApp, scenarioKey, metadata }) => {
   const [result] = await pool.execute(
     `INSERT INTO vr_sessions (user_id, session_code, vr_app, scenario_key, status, metadata_json)
-     VALUES (?, ?, ?, ?, 'active', ?)`,
+     VALUES (?, ?, ?, ?, 'scheduled', ?)`,
     [
       userId,
       buildPendingSessionCode(),
@@ -60,7 +60,7 @@ export const findActiveVrSessionByCode = async (sessionCode) => {
     `SELECT id, user_id, session_code, vr_app, scenario_key, status, metadata_json, result_json,
             video_url, video_uploaded_at, started_at, ended_at, created_at, updated_at
      FROM vr_sessions
-     WHERE session_code = ? AND status = 'active'
+     WHERE session_code = ? AND status IN ('scheduled', 'active', 'in_progress')
      LIMIT 1`,
     [sessionCode]
   );
@@ -150,4 +150,31 @@ export const cancelVrSession = async ({ sessionId, userId }) => {
   );
 
   return findVrSessionByIdForUser({ sessionId, userId });
+};
+
+export const updateVrSessionStatus = async ({ sessionId, status }) => {
+  const shouldSetEndedAt = status === "completed" || status === "canceled" || status === "no_show";
+
+  await pool.execute(
+    `UPDATE vr_sessions
+     SET status = ?,
+         ended_at = ${shouldSetEndedAt ? "COALESCE(ended_at, CURRENT_TIMESTAMP)" : "ended_at"},
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [status, sessionId]
+  );
+
+  return findVrSessionById(sessionId);
+};
+
+export const updateVrSessionMetadata = async ({ sessionId, metadata }) => {
+  await pool.execute(
+    `UPDATE vr_sessions
+     SET metadata_json = ?,
+         updated_at = CURRENT_TIMESTAMP
+     WHERE id = ?`,
+    [JSON.stringify(metadata ?? null), sessionId]
+  );
+
+  return findVrSessionById(sessionId);
 };

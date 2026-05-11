@@ -25,7 +25,12 @@ import {
   getProfile,
   getVrSessions,
   saveVrSessionFeedback,
+  type SessionStatus,
   uploadVrSessionAudioByCode,
+  updateAdminSessionStatus,
+  updateAgentSessionStatus,
+  rescheduleAdminSession,
+  rescheduleAgentSession,
 } from "@/lib/auth";
 import { createPracticeSession } from "@/lib/vr";
 
@@ -175,7 +180,7 @@ const Index = () => {
         selectedTags?: string[];
         scheduledAt?: string;
       } | null;
-      status?: "active" | "completed" | "canceled";
+      status?: SessionStatus;
       result?: {
         feedback?: SessionFeedback;
       } | null;
@@ -282,7 +287,7 @@ const Index = () => {
         result?: {
           feedback?: SessionFeedback;
         } | null;
-        status?: "active" | "completed" | "canceled";
+        status?: SessionStatus;
         createdAt: string;
       }>) ?? []).map(mapApiSessionToRecord);
 
@@ -644,7 +649,7 @@ const Index = () => {
       email,
       mode,
       difficulty: selectedDifficulty,
-      status: "active",
+      status: "scheduled",
       createdAt: creation.createdAt,
       scheduledAt,
       videoUrl: creation.videoUrl ?? null,
@@ -892,7 +897,7 @@ const Index = () => {
       sessionCode: string;
       mode: "improvisation" | "presentation";
       difficulty: "easy" | "medium" | "hard";
-      status: "active" | "completed" | "canceled";
+      status: SessionStatus;
       audioUrl?: string | null;
       videoUrl?: string | null;
       createdAt: string;
@@ -916,6 +921,73 @@ const Index = () => {
       },
       file
     );
+  };
+
+  const handleUpdateOperationalStatus = async (
+    sessionIdToUpdate: string,
+    status: SessionStatus
+  ) => {
+    if (!authToken) return;
+
+    const res =
+      userRole === "agent"
+        ? await updateAgentSessionStatus(authToken, sessionIdToUpdate, status)
+        : await updateAdminSessionStatus(authToken, sessionIdToUpdate, status);
+
+    if (!res.success) {
+      window.alert(res.message || "No se pudo actualizar el estado.");
+      return;
+    }
+
+    updateSessionRecord(sessionIdToUpdate, (session) => ({ ...session, status }));
+    setAdminReportSessions((current) =>
+      current.map((session) =>
+        session.id === sessionIdToUpdate ? { ...session, status } : session
+      )
+    );
+    setAgentSessions((current) =>
+      current.map((session) =>
+        session.id === sessionIdToUpdate ? { ...session, status } : session
+      )
+    );
+    setAdminReportRefreshKey((key) => key + 1);
+  };
+
+  const handleRescheduleOperationalSession = async (
+    sessionIdToUpdate: string,
+    nextScheduledAt: string
+  ) => {
+    if (!authToken) return;
+
+    const res =
+      userRole === "agent"
+        ? await rescheduleAgentSession(authToken, sessionIdToUpdate, nextScheduledAt)
+        : await rescheduleAdminSession(authToken, sessionIdToUpdate, nextScheduledAt);
+
+    if (!res.success) {
+      window.alert(res.message || "No se pudo reprogramar la sesion.");
+      return;
+    }
+
+    updateSessionRecord(sessionIdToUpdate, (session) => ({
+      ...session,
+      scheduledAt: nextScheduledAt,
+    }));
+    setAdminReportSessions((current) =>
+      current.map((session) =>
+        session.id === sessionIdToUpdate
+          ? { ...session, scheduledAt: nextScheduledAt }
+          : session
+      )
+    );
+    setAgentSessions((current) =>
+      current.map((session) =>
+        session.id === sessionIdToUpdate
+          ? { ...session, scheduledAt: nextScheduledAt }
+          : session
+      )
+    );
+    setAdminReportRefreshKey((key) => key + 1);
   };
 
   const adminUsers = adminReportUsers;
@@ -996,6 +1068,8 @@ const Index = () => {
               onCreateSession={handleMode}
               onLookupSession={handleLookupAgentSession}
               onUploadAudioByCode={handleUploadAudioByCode}
+              onUpdateSessionStatus={handleUpdateOperationalStatus}
+              onRescheduleSession={handleRescheduleOperationalSession}
               onRefresh={() => setAdminReportRefreshKey((key) => key + 1)}
               onLogout={handleLogout}
             />
@@ -1025,6 +1099,8 @@ const Index = () => {
             dataSourceLabel="base real"
             onLoadUserSessions={handleLoadAdminUserSessions}
             onUploadAudio={handleUploadSessionAudio}
+            onUpdateSessionStatus={handleUpdateOperationalStatus}
+            onRescheduleSession={handleRescheduleOperationalSession}
             onRefresh={() => setAdminReportRefreshKey((key) => key + 1)}
             onBack={() => setCurrentStep("dashboard")}
             onLogout={handleLogout}
