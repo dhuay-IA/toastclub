@@ -10,6 +10,7 @@ import {
   updateVrSessionStatus,
 } from "../models/vrSessionModel.js";
 import { findUserById, listUsersForAdminReport } from "../models/userModel.js";
+import { sendSessionNotificationEmail } from "../services/emailService.js";
 
 const parseJsonColumn = (value) => {
   if (!value) return null;
@@ -169,6 +170,20 @@ export const updateAdminSessionStatus = async (req, res) => {
 
   const user = await findUserById(session.user_id);
 
+  try {
+    await sendSessionNotificationEmail({
+      to: user?.email,
+      name: user?.name,
+      sessionCode: session.session_code,
+      mode: session.vr_app,
+      scheduledAt: parseJsonColumn(session.metadata_json)?.scheduledAt,
+      type: "status",
+      status: session.status,
+    });
+  } catch (error) {
+    console.warn("Session status notification failed:", error?.message || error);
+  }
+
   return res.status(200).json({
     success: true,
     data: serializeAdminSession({
@@ -208,6 +223,20 @@ export const rescheduleAdminSession = async (req, res) => {
   };
   const session = await updateVrSessionMetadata({ sessionId, metadata });
   const user = await findUserById(session.user_id);
+
+  try {
+    await sendSessionNotificationEmail({
+      to: user?.email,
+      name: user?.name,
+      sessionCode: session.session_code,
+      mode: session.vr_app,
+      scheduledAt,
+      type: "rescheduled",
+      status: session.status,
+    });
+  } catch (error) {
+    console.warn("Session reschedule notification failed:", error?.message || error);
+  }
 
   return res.status(200).json({
     success: true,

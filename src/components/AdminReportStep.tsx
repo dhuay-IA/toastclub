@@ -83,17 +83,29 @@ const downloadCsv = (
   sessions: Array<SessionSummary & { userId?: number; email: string; name?: string }>
 ) => {
   const sessionsByUser = new Map<string, number>();
+  const audioCount = sessions.filter((session) => session.audioUrl ?? session.videoUrl).length;
+  const feedbackCount = sessions.filter((session) => session.feedback).length;
+  const canceledCount = sessions.filter((session) => session.status === "canceled").length;
+  const noShowCount = sessions.filter((session) => session.status === "no_show").length;
 
   sessions.forEach((session) => {
     sessionsByUser.set(session.email, (sessionsByUser.get(session.email) ?? 0) + 1);
   });
 
   const lines = [
+    ["Resumen", "", "", "", "", "", "", "", "", "", "", "", ""],
+    ["Total estudiantes", users.length, "", "", "", "", "", "", "", "", "", "", ""],
+    ["Total sesiones", sessions.length, "", "", "", "", "", "", "", "", "", "", ""],
+    ["Audios recibidos", audioCount, "", "", "", "", "", "", "", "", "", "", ""],
+    ["Feedback registrados", feedbackCount, "", "", "", "", "", "", "", "", "", "", ""],
+    ["Canceladas", canceledCount, "", "", "", "", "", "", "", "", "", "", ""],
+    ["No asistió", noShowCount, "", "", "", "", "", "", "", "", "", "", ""],
+    ["", "", "", "", "", "", "", "", "", "", "", "", ""],
     [
       "Tipo",
       "Email",
       "Nombre",
-      "Codigo Sesion",
+      "Código sesión",
       "Total Sesiones",
       "Ultimo Ingreso",
       "Modo",
@@ -126,11 +138,11 @@ const downloadCsv = (
       session.sessionCode ?? "",
       "",
       "",
-      session.mode === "improvisation" ? "Improvisacion" : "Presentacion",
+      session.mode === "improvisation" ? "Improvisación" : "Presentación",
       difficultyLabels[session.difficulty],
       formatDate(session.createdAt),
       formatOptionalDate(session.scheduledAt),
-      session.status ?? "active",
+      sessionStatusLabels[session.status ?? "active"],
       session.audioUrl ?? session.videoUrl ?? "",
       session.feedback ? "Registrado" : "Pendiente",
     ]),
@@ -354,7 +366,7 @@ const AdminReportStep = ({
               </p>
               <p className="mt-2 text-3xl font-bold text-foreground">{totalSessions}</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                Total de practicas registradas en la base compartida.
+                Total de prácticas registradas en la base compartida.
               </p>
             </article>
 
@@ -378,7 +390,7 @@ const AdminReportStep = ({
             <article className="rounded-2xl border border-border/70 bg-white/75 p-5">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Ultimos 7 dias
+                  Últimos 7 días
                 </p>
                 <BarChart3 className="h-4 w-4 text-secondary" />
               </div>
@@ -441,7 +453,7 @@ const AdminReportStep = ({
                 <div className="rounded-xl bg-muted/60 p-3">
                   <p className="text-xl font-bold text-foreground">{difficultyTotals.hard}</p>
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                    Dificil
+                    Difícil
                   </p>
                 </div>
               </div>
@@ -484,7 +496,7 @@ const AdminReportStep = ({
                   Estudiantes registrados
                 </p>
                 <h3 className="mt-1 text-lg font-semibold text-foreground">
-                  Ultimos ingresos
+                  Últimos ingresos
                 </h3>
               </div>
             </div>
@@ -602,7 +614,7 @@ const AdminReportStep = ({
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="text-sm font-semibold text-foreground">
-                          {session.mode === "improvisation" ? "Improvisacion" : "Presentacion"}
+                          {session.mode === "improvisation" ? "Improvisación" : "Presentación"}
                         </p>
                         <p className="mt-1 text-xs text-muted-foreground">
                           {session.name ? `${session.name} - ` : ""}{session.email}
@@ -699,7 +711,7 @@ const AdminReportStep = ({
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {isLoading
                     ? "Cargando sesiones reales..."
-                    : "Todavia no se han creado sesiones reales para incluirlas en el reporte."}
+                    : "Todavía no se han creado sesiones reales para incluirlas en el reporte."}
                 </p>
               </div>
             )}
@@ -721,7 +733,7 @@ const AdminReportStep = ({
                 onClick={onLogout}
                 className="rounded-lg border border-border bg-white/80 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
               >
-                Cerrar sesion
+                Cerrar sesión
               </button>
             </div>
           </aside>
@@ -790,8 +802,8 @@ const AdminReportStep = ({
                         <div>
                           <p className="text-sm font-semibold text-foreground">
                             {session.mode === "improvisation"
-                              ? "Improvisacion"
-                              : "Presentacion"}
+                              ? "Improvisación"
+                              : "Presentación"}
                           </p>
                           {session.sessionCode ? (
                             <p className="mt-1 font-mono text-xs font-semibold text-secondary">
@@ -813,8 +825,8 @@ const AdminReportStep = ({
                         <p>
                           Modo:{" "}
                           {session.mode === "improvisation"
-                            ? "Improvisacion"
-                            : "Presentacion"}
+                            ? "Improvisación"
+                            : "Presentación"}
                         </p>
                         <p>Estado: {sessionStatusLabels[session.status ?? "active"]}</p>
                       </div>
@@ -922,7 +934,7 @@ const AdminReportStep = ({
               ) : (
                 <div className="rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
                   <p className="text-sm leading-relaxed text-muted-foreground">
-                    {detailError || "Este alumno aun no tiene sesiones para mostrar."}
+                    {detailError || "Este alumno aún no tiene sesiones para mostrar."}
                   </p>
                 </div>
               )}

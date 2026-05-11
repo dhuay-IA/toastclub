@@ -73,15 +73,15 @@ export const sessionStatusLabels = {
 const modeCards = [
   {
     mode: "improvisation" as const,
-    title: "Improvisacion",
-    description: "Elige un tema, revisa el teleprompter y practica respuestas espontaneas.",
+    title: "Improvisación",
+    description: "Elige un tema, revisa el teleprompter y practica respuestas espontáneas.",
     icon: Sparkles,
     accent: "from-secondary/20 to-accent/10",
   },
   {
     mode: "presentation" as const,
-    title: "Presentacion propia",
-    description: "Sube tu material, ajusta la duracion y ensaya tu exposicion en VR.",
+    title: "Presentación propia",
+    description: "Sube tu material, ajusta la duración y ensaya tu exposición en VR.",
     icon: Presentation,
     accent: "from-primary/15 to-secondary/10",
   },
@@ -110,6 +110,8 @@ const getSessionMinutes = (session: SessionSummary) =>
 
 const getPercent = (value: number, total: number) =>
   total > 0 ? Math.round((value / total) * 100) : 0;
+
+const getDayKey = (date: Date) => date.toISOString().slice(0, 10);
 
 const DashboardStep = ({
   userName,
@@ -166,6 +168,25 @@ const DashboardStep = ({
     .slice(0, 3);
   const latestSessions = activeSessions.slice(0, 5);
   const pendingAudioCount = activeSessions.length - audioCount;
+  const weeklyActivity = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date();
+    date.setDate(date.getDate() - (6 - index));
+    const key = getDayKey(date);
+    const count = activeSessions.filter(
+      (session) => getDayKey(new Date(session.createdAt)) === key
+    ).length;
+
+    return {
+      key,
+      label: new Intl.DateTimeFormat("es-PE", { weekday: "short" }).format(date),
+      count,
+    };
+  });
+  const maxWeeklyCount = Math.max(...weeklyActivity.map((item) => item.count), 1);
+  const completionPercent = getPercent(
+    activeSessions.filter((session) => session.status === "completed").length,
+    activeSessions.length
+  );
 
   if (isAdmin && onOpenAdminReport) {
     return (
@@ -183,7 +204,7 @@ const DashboardStep = ({
                     Hola, {userName}
                   </h2>
                   <p className="max-w-2xl text-sm leading-relaxed text-white/85">
-                    Desde aqui puedes revisar estudiantes, sesiones, audios,
+                    Desde aquí puedes revisar estudiantes, sesiones, audios,
                     feedbacks y actividad general registrada en Railway.
                   </p>
                 </div>
@@ -200,10 +221,10 @@ const DashboardStep = ({
                   Reporte operativo
                 </p>
                 <h3 className="mt-2 text-lg font-semibold text-foreground">
-                  Panel real de administracion
+                  Panel real de administración
                 </h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  Consulta la informacion consolidada de alumnos y practicas sin
+                  Consulta la información consolidada de alumnos y prácticas sin
                   entrar al flujo de estudiante.
                 </p>
                 <button
@@ -230,7 +251,7 @@ const DashboardStep = ({
                     onClick={onLogout}
                     className="w-full rounded-lg border border-border bg-white px-4 py-3 text-left text-sm font-semibold text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
                   >
-                    Cerrar sesion
+                    Cerrar sesión
                   </button>
                 </div>
               </div>
@@ -250,7 +271,7 @@ const DashboardStep = ({
                   </div>
                   <div className="flex flex-1 flex-col p-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      Crear sesion
+                      Crear sesión
                     </p>
                     <h3 className="mt-2 text-base font-semibold text-foreground">
                       {card.title}
@@ -277,7 +298,7 @@ const DashboardStep = ({
                   Modulo pendiente
                 </h3>
                 <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
-                  Aqui quedara el acceso para encargados/equipos cuando activemos ese flujo.
+                  Aquí quedará el acceso para encargados/equipos cuando activemos ese flujo.
                 </p>
                 <span className="mt-4 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                   Aun no habilitado
@@ -305,8 +326,8 @@ const DashboardStep = ({
                   Hola, {userName}
                 </h2>
                 <p className="max-w-xl text-sm leading-relaxed text-white/85">
-                  Desde aqui puedes iniciar una nueva practica, revisar audios y
-                  abrir el feedback de cada sesion desde su propio registro.
+                  Desde aquí puedes iniciar una nueva práctica, revisar audios y
+                  abrir el feedback de cada sesión desde su propio registro.
                 </p>
               </div>
 
@@ -322,7 +343,7 @@ const DashboardStep = ({
                 Accion rapida
               </p>
               <h3 className="mt-2 text-lg font-semibold text-foreground">
-                Crea una nueva sesion de practica
+                Crea una nueva sesión de práctica
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Elige como quieres entrenar hoy y te llevamos directo a la configuracion.
@@ -373,7 +394,7 @@ const DashboardStep = ({
                 Progreso personal
               </p>
               <h3 className="mt-1 text-lg font-semibold text-foreground">
-                Indicadores de practica
+                Indicadores de práctica
               </h3>
             </div>
           </div>
@@ -381,7 +402,7 @@ const DashboardStep = ({
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Ultimos 7 dias
+                Últimos 7 días
               </p>
               <p className="mt-3 text-3xl font-bold text-foreground">{recentCount}</p>
               <p className="mt-2 text-sm text-muted-foreground">
@@ -397,7 +418,7 @@ const DashboardStep = ({
                 {activeSessions.length ? difficultyLabels[mainDifficulty] : "N/A"}
               </p>
               <p className="mt-2 text-sm text-muted-foreground">
-                segun tus sesiones activas
+                según tus sesiones activas
               </p>
             </div>
 
@@ -436,8 +457,8 @@ const DashboardStep = ({
               </div>
               <div className="mt-5 space-y-4">
                 {[
-                  { label: "Improvisacion", value: improvisationCount },
-                  { label: "Presentacion", value: presentationCount },
+                  { label: "Improvisación", value: improvisationCount },
+                  { label: "Presentación", value: presentationCount },
                 ].map((item) => (
                   <div key={item.label}>
                     <div className="mb-2 flex items-center justify-between text-sm">
@@ -556,6 +577,49 @@ const DashboardStep = ({
             </div>
           </div>
 
+          <div className="mt-5 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-sm font-semibold text-foreground">
+                Evolución de los últimos 7 días
+              </p>
+              <div className="mt-5 grid grid-cols-7 items-end gap-2">
+                {weeklyActivity.map((item) => (
+                  <div key={item.key} className="flex flex-col items-center gap-2">
+                    <div className="flex h-24 w-full items-end rounded-full bg-muted/60 px-1">
+                      <div
+                        className="w-full rounded-full bg-secondary"
+                        style={{ height: `${Math.max((item.count / maxWeeklyCount) * 100, item.count ? 18 : 4)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border/70 bg-white/75 p-5">
+              <p className="text-sm font-semibold text-foreground">
+                Lectura rápida
+              </p>
+              <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                <p>
+                  Finalización: <span className="font-semibold text-foreground">{completionPercent}%</span>
+                </p>
+                <p>
+                  Audio pendiente: <span className="font-semibold text-foreground">{pendingAudioCount}</span>
+                </p>
+                <p>
+                  Foco actual:{" "}
+                  <span className="font-semibold text-foreground">
+                    {latestFeedbackSession?.feedback?.improvement || "Completar feedback para detectar mejoras"}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+
           {feedbackTimeline.length > 0 ? (
             <div className="mt-5 rounded-2xl border border-border/70 bg-white/75 p-5">
               <div className="flex items-center justify-between gap-3">
@@ -647,7 +711,7 @@ const DashboardStep = ({
 
           <aside className="glass-card p-6">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-              Ultima sesion
+              Última sesión
             </p>
 
             {sessionSummary ? (
@@ -655,11 +719,11 @@ const DashboardStep = ({
                 <div className="rounded-2xl border border-border/70 bg-white/75 p-4">
                   {sessionSummary.sessionCode ? (
                     <p className="mb-2 inline-flex rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                      Codigo {sessionSummary.sessionCode}
+                      Código {sessionSummary.sessionCode}
                     </p>
                   ) : null}
                   <p className="text-xs uppercase tracking-[0.24em] text-muted-foreground">
-                    {sessionSummary.mode === "improvisation" ? "Improvisacion" : "Presentacion"}
+                    {sessionSummary.mode === "improvisation" ? "Improvisación" : "Presentación"}
                   </p>
                   <p className="mt-2 text-sm font-semibold text-foreground">
                     {formatSessionDate(sessionSummary.createdAt)}
@@ -681,7 +745,7 @@ const DashboardStep = ({
                   </p>
                   {sessionSummary.mode === "improvisation" && sessionSummary.promptWord ? (
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Palabra guia: {sessionSummary.promptWord}
+                      Palabra guía: {sessionSummary.promptWord}
                     </p>
                   ) : null}
                   <p className="mt-2 text-xs text-muted-foreground">
@@ -725,7 +789,7 @@ const DashboardStep = ({
                     className="flex-1 rounded-lg border border-secondary/30 bg-secondary/5 px-4 py-3 text-sm font-semibold text-secondary transition-colors hover:border-secondary hover:bg-secondary/10"
                   >
                     {sessionSummary.status === "canceled"
-                      ? "Sesion cancelada"
+                      ? "Sesión cancelada"
                       : feedbackComplete(sessionSummary.feedback)
                         ? "Editar feedback"
                         : "Completar feedback"}
@@ -735,8 +799,8 @@ const DashboardStep = ({
             ) : (
               <div className="mt-4 rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Aun no has generado una sesion desde este navegador. Elige un modo
-                  de practica para crear la primera.
+                  Aún no has generado una sesión desde este navegador. Elige un modo
+                  de práctica para crear la primera.
                 </p>
               </div>
             )}
@@ -767,13 +831,13 @@ const DashboardStep = ({
                 >
                   {session.sessionCode ? (
                     <p className="mb-3 inline-flex w-fit rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-mono text-xs font-bold uppercase tracking-[0.18em] text-primary">
-                      Codigo {session.sessionCode}
+                      Código {session.sessionCode}
                     </p>
                   ) : null}
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-foreground">
-                        {session.mode === "improvisation" ? "Improvisacion" : "Presentacion"}
+                        {session.mode === "improvisation" ? "Improvisación" : "Presentación"}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
                         {formatSessionDate(session.createdAt)}
@@ -808,7 +872,7 @@ const DashboardStep = ({
                     </p>
                     {session.mode === "improvisation" && session.promptWord ? (
                       <p className="mt-2 text-xs text-muted-foreground">
-                        Palabra guia: {session.promptWord}
+                        Palabra guía: {session.promptWord}
                       </p>
                     ) : null}
                     {session.mode === "improvisation" && session.selectedTags?.length ? (
@@ -864,7 +928,7 @@ const DashboardStep = ({
                       onClick={() => onCancelSession(session.id)}
                       disabled={session.status === "canceled"}
                       className="inline-flex items-center justify-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm font-semibold text-destructive transition-colors hover:border-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50"
-                      title="Cancelar sesion"
+                      title="Cancelar sesión"
                     >
                       <XCircle className="h-4 w-4" />
                       Cancelar
@@ -876,8 +940,8 @@ const DashboardStep = ({
           ) : (
             <div className="mt-5 rounded-2xl border border-dashed border-border/80 bg-white/70 p-5">
               <p className="text-sm leading-relaxed text-muted-foreground">
-                Todavia no hay sesiones guardadas para este usuario. Cuando completes una
-                practica, aparecera aqui automaticamente.
+                Todavía no hay sesiones guardadas para este usuario. Cuando completes una
+                práctica, aparecerá aquí automáticamente.
               </p>
             </div>
           )}
@@ -887,7 +951,7 @@ const DashboardStep = ({
               onClick={onLogout}
               className="rounded-lg border border-border bg-white/80 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-foreground transition-colors hover:border-destructive/40 hover:text-destructive"
             >
-              Cerrar sesion
+              Cerrar sesión
             </button>
           </div>
         </section>

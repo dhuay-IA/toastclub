@@ -223,6 +223,91 @@ export const sendPasswordResetEmail = async ({
   });
 };
 
+const formatSessionDate = (value) => {
+  if (!value) return "fecha por confirmar";
+
+  try {
+    return new Intl.DateTimeFormat("es-PE", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "America/Lima",
+    }).format(new Date(value));
+  } catch {
+    return "fecha por confirmar";
+  }
+};
+
+const modeLabels = {
+  improvisation: "improvisación",
+  presentation: "presentación",
+};
+
+const statusLabels = {
+  scheduled: "programada",
+  active: "vigente",
+  in_progress: "en atención",
+  completed: "finalizada",
+  canceled: "cancelada",
+  no_show: "no asistió",
+};
+
+export const sendSessionNotificationEmail = async ({
+  to,
+  name,
+  sessionCode,
+  mode,
+  scheduledAt,
+  type,
+  status,
+}) => {
+  if (!to) return;
+
+  const appName = process.env.MAIL_APP_NAME || "ToastClub";
+  const safeName = name?.trim() || "usuario";
+  const modeLabel = modeLabels[mode] || "práctica";
+  const scheduledLabel = formatSessionDate(scheduledAt);
+  const statusLabel = statusLabels[status] || status;
+  const subjectByType = {
+    created: `${appName}: sesión programada ${sessionCode}`,
+    rescheduled: `${appName}: sesión reprogramada ${sessionCode}`,
+    status: `${appName}: actualización de sesión ${sessionCode}`,
+  };
+  const introByType = {
+    created: `Tu sesión de ${modeLabel} fue programada correctamente.`,
+    rescheduled: `Tu sesión de ${modeLabel} fue reprogramada.`,
+    status: `Tu sesión de ${modeLabel} cambió de estado${statusLabel ? ` a ${statusLabel}` : ""}.`,
+  };
+
+  const text = [
+    `Hola ${safeName},`,
+    "",
+    introByType[type] || "Tu sesión fue actualizada.",
+    `Código de sesión: ${sessionCode}`,
+    `Fecha programada: ${scheduledLabel}`,
+    "",
+    "Puedes revisar el detalle al ingresar a tu panel de ToastClub.",
+  ].join("\n");
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; color: #111827; line-height: 1.6;">
+      <p>Hola <strong>${safeName}</strong>,</p>
+      <p>${introByType[type] || "Tu sesión fue actualizada."}</p>
+      <p><strong>Código de sesión:</strong> ${sessionCode}</p>
+      <p><strong>Fecha programada:</strong> ${scheduledLabel}</p>
+      <p>Puedes revisar el detalle al ingresar a tu panel de <strong>${appName}</strong>.</p>
+    </div>
+  `;
+
+  await sendEmail({
+    debugLabel: "notificación de sesión",
+    from: process.env.MAIL_FROM,
+    to,
+    subject: subjectByType[type] || `${appName}: actualización de sesión`,
+    text,
+    html,
+  });
+};
+
 export const emailConfigStatus = () => ({
   configured: isBrevoApiConfigured() || isSmtpConfigured(),
   provider: isBrevoApiConfigured() ? "brevo-api" : isSmtpConfigured() ? "smtp" : null,

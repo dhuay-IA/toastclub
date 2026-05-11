@@ -10,6 +10,7 @@ import {
   saveVrSessionFeedback,
 } from "../models/vrSessionModel.js";
 import { findUserById } from "../models/userModel.js";
+import { sendSessionNotificationEmail } from "../services/emailService.js";
 import { promises as fs } from "fs";
 import path from "path";
 
@@ -182,6 +183,23 @@ export const startVrSession = async (req, res) => {
     scenarioKey: String(scenarioKey).trim(),
     metadata: sessionMetadata,
   });
+
+  const sessionOwner = await findUserById(sessionUserId);
+  const createdMetadata = parseJsonColumn(session.metadata_json) ?? {};
+
+  try {
+    await sendSessionNotificationEmail({
+      to: sessionOwner?.email,
+      name: sessionOwner?.name,
+      sessionCode: session.session_code,
+      mode: session.vr_app,
+      scheduledAt: createdMetadata.scheduledAt,
+      type: "created",
+      status: session.status,
+    });
+  } catch (error) {
+    console.warn("Session notification email failed:", error?.message || error);
+  }
 
   return res.status(201).json({
     success: true,
@@ -382,6 +400,20 @@ export const cancelMyVrSession = async (req, res) => {
     sessionId,
     userId: req.user.id,
   });
+
+  try {
+    await sendSessionNotificationEmail({
+      to: req.user.email,
+      name: req.user.name,
+      sessionCode: session.session_code,
+      mode: session.vr_app,
+      scheduledAt: parseJsonColumn(session.metadata_json)?.scheduledAt,
+      type: "status",
+      status: session.status,
+    });
+  } catch (error) {
+    console.warn("Session cancellation email failed:", error?.message || error);
+  }
 
   return res.status(200).json({
     success: true,
